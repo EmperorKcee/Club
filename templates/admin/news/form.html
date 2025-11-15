@@ -1,0 +1,232 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}{% if news %}Edit "{{ news.title }}"{% else %}New Article{% endif %} - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            {% if news %}
+                Edit "{{ news.title }}"
+            {% else %}
+                Create New Article
+            {% endif %}
+        </h1>
+        <a href="{{ url_for('admin_news') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Back to News
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="POST" action="{{ form_action }}" enctype="multipart/form-data">
+                        {{ form.csrf_token }}
+                        
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Title *</label>
+                            {{ form.title(class="form-control" + (" is-invalid" if form.title.errors else ""), 
+                                         placeholder="Enter article title") }}
+                            {% if form.title.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.title.errors[0] }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="summary" class="form-label">Summary</label>
+                            {{ form.summary(class="form-control", 
+                                          placeholder="A short summary that will appear in article previews",
+                                          rows="2") }}
+                            <div class="form-text">
+                                A brief summary of the article (max 500 characters). If left empty, the first 200 characters of the content will be used.
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="content" class="form-label">Content *</label>
+                            {{ form.content(class="form-control" + (" is-invalid" if form.content.errors else ""), 
+                                          rows="12",
+                                          placeholder="Write your article content here...") | safe }}
+                            {% if form.content.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.content.errors[0] }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="category" class="form-label">Category</label>
+                                    {{ form.category(class="form-select") }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Featured Image</label>
+                                    <input type="file" class="form-control" id="image" name="image" accept="image/*">
+                                    {% if news and news.image_url %}
+                                        <div class="mt-2">
+                                            <img src="{{ url_for('static', filename=news.image_url) }}" 
+                                                 alt="Current featured image" class="img-thumbnail" style="max-height: 100px;">
+                                            <div class="form-text">Leave empty to keep current image</div>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center mt-4">
+                            <div class="form-check form-switch">
+                                {{ form.is_published(class="form-check-input") }}
+                                <label class="form-check-label" for="is_published">Publish this article</label>
+                            </div>
+                            <div class="form-check form-switch">
+                                {{ form.is_featured(class="form-check-input") }}
+                                <label class="form-check-label" for="is_featured">Feature this article</label>
+                            </div>
+                            <div>
+                                <a href="{{ url_for('admin_news') }}" class="btn btn-outline-secondary me-2">Cancel</a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-1"></i> Save Article
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Article Preview</h5>
+                </div>
+                <div class="card-body">
+                    <div class="border rounded p-3 bg-light">
+                        <h5 id="preview-title" class="mb-2">{{ form.title.data or 'Your Article Title' }}</h5>
+                        <p class="text-muted small mb-2" id="preview-date">
+                            {% if news %}
+                                {{ news.created_at.strftime('%B %d, %Y') }}
+                            {% else %}
+                                {{ now.strftime('%B %d, %Y') }}
+                            {% endif %}
+                        </p>
+                        <p id="preview-summary" class="text-muted">
+                            {{ form.summary.data or 'A preview of your article summary will appear here...' }}
+                        </p>
+                        <div id="preview-image" class="mb-3 {% if not news or not news.image_url %}d-none{% endif %}">
+                            {% if news and news.image_url %}
+                                <img src="{{ url_for('static', filename=news.image_url) }}" alt="Preview" class="img-fluid rounded">
+                            {% else %}
+                                <img src="#" alt="Preview" class="img-fluid rounded">
+                            {% endif %}
+                        </div>
+                        <div id="preview-content">
+                            {{ form.content.data|safe or 'A preview of your article content will appear here as you type...' }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Publishing</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Author</label>
+                        <input type="text" class="form-control" value="{{ current_user.full_name }}" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Created</label>
+                        <input type="text" class="form-control" 
+                               value="{% if news %}{{ news.created_at.strftime('%B %d, %Y at %H:%M') }}{% else %}Draft{% endif %}" 
+                               readonly>
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label">Last Updated</label>
+                        <input type="text" class="form-control" 
+                               value="{% if news and news.updated_at %}{{ news.updated_at.strftime('%B %d, %Y at %H:%M') }}{% else %}Not updated yet{% endif %}" 
+                               readonly>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.ckeditor.com/4.16.2/standard/ckeditor.js"></script>
+<script>
+    // Initialize CKEditor
+    CKEDITOR.replace('content', {
+        toolbar: [
+            { name: 'basicstyles', items: ['Bold', 'Italic', 'Underline', 'Strike', '-', 'RemoveFormat'] },
+            { name: 'paragraph', items: ['NumberedList', 'BulletedList', '-', 'Blockquote'] },
+            { name: 'links', items: ['Link', 'Unlink'] },
+            { name: 'insert', items: ['Image', 'Table', 'HorizontalRule'] },
+            { name: 'styles', items: ['Format', 'Font', 'FontSize'] },
+            { name: 'colors', items: ['TextColor', 'BGColor'] },
+            { name: 'tools', items: ['Maximize'] }
+        ],
+        height: 300,
+        filebrowserUploadUrl: '{{ url_for("upload_image") }}',
+        filebrowserUploadMethod: 'form'
+    });
+    
+    // Live preview
+    document.getElementById('title').addEventListener('input', function() {
+        document.getElementById('preview-title').textContent = this.value || 'Your Article Title';
+    });
+    
+    document.getElementById('summary').addEventListener('input', function() {
+        document.getElementById('preview-summary').textContent = this.value || 'A preview of your article summary will appear here...';
+    });
+    
+    // Update content preview when CKEditor content changes
+    CKEDITOR.instances['content'].on('change', function() {
+        document.getElementById('preview-content').innerHTML = this.getData() || 'A preview of your article content will appear here as you type...';
+    });
+    
+    // Image preview
+    document.getElementById('image').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        const previewImage = document.getElementById('preview-image');
+        const previewImg = previewImage.querySelector('img');
+        
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImg.src = e.target.result;
+                previewImage.classList.remove('d-none');
+            }
+            reader.readAsDataURL(file);
+        } else if (!previewImg.src || previewImg.src.endsWith('#')) {
+            previewImage.classList.add('d-none');
+        }
+    });
+    
+    // Initialize preview with existing data
+    document.addEventListener('DOMContentLoaded', function() {
+        const previewTitle = document.getElementById('preview-title');
+        const previewSummary = document.getElementById('preview-summary');
+        const previewContent = document.getElementById('preview-content');
+        
+        // Update preview with any existing form data
+        if (previewTitle && !previewTitle.textContent.trim()) {
+            previewTitle.textContent = 'Your Article Title';
+        }
+        if (previewSummary && !previewSummary.textContent.trim()) {
+            previewSummary.textContent = 'A preview of your article summary will appear here...';
+        }
+        if (previewContent && !previewContent.textContent.trim()) {
+            previewContent.innerHTML = 'A preview of your article content will appear here as you type...';
+        }
+    });
+</script>
+{% endblock %}

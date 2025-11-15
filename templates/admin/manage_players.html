@@ -1,0 +1,173 @@
+{% extends "admin/base.html" %}
+
+{% block admin_content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Player Accounts</h1>
+    <div class="btn-toolbar mb-2 mb-md-0 gap-2">
+        <a href="{{ url_for('admin.assign_player_login') }}" class="btn btn-primary">
+            <i class="fas fa-user-plus me-2"></i> Add Player Account
+        </a>
+        <div class="btn-group">
+            <button type="button" class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-cog me-1"></i> Options
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="#"><i class="fas fa-upload me-2"></i>Bulk Import</a></li>
+                <li><a class="dropdown-item" href="#"><i class="fas fa-download me-2"></i>Export List</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item text-danger" href="#"><i class="fas fa-sync-alt me-2"></i>Reset All Passwords</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Stats -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase mb-0">Total Players</h6>
+                        <h2 class="mb-0">{{ players|length }}</h2>
+                    </div>
+                    <i class="fas fa-users fa-3x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase mb-0">Active Accounts</h6>
+                        <h2 class="mb-0">{{ players|selectattr('user_account')|selectattr('user_account.is_active')|list|length }}</h2>
+                    </div>
+                    <i class="fas fa-user-check fa-3x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-warning text-dark">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase mb-0">No Account</h6>
+                        <h2 class="mb-0">{{ players|rejectattr('user_account')|list|length }}</h2>
+                    </div>
+                    <i class="fas fa-user-times fa-3x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Player</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for player in players %}
+                    <tr>
+                        <td>{{ player.first_name }} {{ player.last_name }}</td>
+                        <td>
+                            {% if player.user_account %}
+                                {{ player.user_account.username }}
+                            {% else %}
+                                <span class="text-muted">No account</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if player.user_account %}
+                                {{ player.user_account.email }}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if player.user_account %}
+                                {% if player.user_account.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Inactive</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="badge bg-warning">No Account</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-nowrap">
+                            {% if player.user_account %}
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <a href="#" class="btn btn-outline-primary" data-bs-toggle="tooltip" title="Edit Account">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="#" class="btn btn-outline-secondary" data-bs-toggle="tooltip" title="Reset Password">
+                                        <i class="fas fa-key"></i>
+                                    </a>
+                                    <a href="#" class="btn btn-outline-danger" data-bs-toggle="tooltip" title="Delete Account">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </a>
+                                </div>
+                            {% else %}
+                                <a href="{{ url_for('admin.assign_player_login') }}?player_id={{ player.id }}" 
+                                   class="btn btn-success btn-sm" data-bs-toggle="tooltip" title="Add Account">
+                                    <i class="fas fa-plus-circle me-1"></i> Add Account
+                                </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center">No players found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% block extra_js %}
+<script>
+    // Initialize tooltips
+    document.addEventListener('DOMContentLoaded', function() {
+        // Enable tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+
+        // Add row hover effect
+        const tableRows = document.querySelectorAll('table tbody tr');
+        tableRows.forEach(row => {
+            row.addEventListener('mouseenter', function() {
+                this.style.backgroundColor = 'rgba(0, 0, 0, 0.03)';
+            });
+            row.addEventListener('mouseleave', function() {
+                this.style.backgroundColor = '';
+            });
+        });
+
+        // Add confirmation for delete actions
+        const deleteButtons = document.querySelectorAll('.btn-outline-danger');
+        deleteButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                if (!confirm('Are you sure you want to delete this account? This action cannot be undone.')) {
+                    e.preventDefault();
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

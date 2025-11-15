@@ -1,0 +1,137 @@
+{% extends "admin/base.html" %}
+
+{% block title %}{{ title }} - Shop Admin{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<style>
+    .sidebar {
+        min-height: calc(100vh - 56px);
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+    .sidebar .nav-link {
+        color: #333;
+        border-radius: 0.25rem;
+        margin: 0.2rem 0.5rem;
+        padding: 0.5rem 1rem;
+    }
+    .sidebar .nav-link:hover {
+        background-color: #f8f9fa;
+    }
+    .sidebar .nav-link.active {
+        background-color: #0d6efd;
+        color: white !important;
+    }
+    .card-dashboard {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border: none;
+        border-radius: 0.5rem;
+        overflow: hidden;
+    }
+    .card-dashboard:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+    .stat-card {
+        border-left: 4px solid #0d6efd;
+    }
+    .stat-card .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        line-height: 1.2;
+    }
+    .stat-card .stat-label {
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #6c757d;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-white sidebar">
+            <div class="position-sticky pt-3">
+                <div class="text-center mb-4">
+                    <h4 class="text-primary">Shop Management</h4>
+                </div>
+                <ul class="nav flex-column mb-4">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'shop_admin.dashboard' %}active{% endif %}" 
+                           href="{{ url_for('shop_admin.dashboard') }}">
+                            <i class="fas fa-tachometer-alt me-2"></i>
+                            Dashboard
+                        </a>
+                    </li>
+                </ul>
+                <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                    <span>Catalog</span>
+                </h6>
+                <ul class="nav flex-column mb-2">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint in ['shop_admin.products', 'shop_admin.new_product', 'shop_admin.edit_product'] %}active{% endif %}" 
+                           href="{{ url_for('shop_admin.products') }}">
+                            <i class="fas fa-box me-2"></i>
+                            Products
+                            <span class="badge bg-primary rounded-pill float-end">{{ Product.query.count() }}</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint in ['shop_admin.categories', 'shop_admin.new_category', 'shop_admin.edit_category'] %}active{% endif %}" 
+                           href="{{ url_for('shop_admin.categories') }}">
+                            <i class="fas fa-tags me-2"></i>
+                            Categories
+                            <span class="badge bg-primary rounded-pill float-end">{{ ProductCategory.query.count() }}</span>
+                        </a>
+                    </li>
+                </ul>
+                <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                    <span>Sales</span>
+                </h6>
+                <ul class="nav flex-column mb-2">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="fas fa-shopping-cart me-2"></i>
+                            Orders
+                            <span class="badge bg-primary rounded-pill float-end">0</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="fas fa-chart-line me-2"></i>
+                            Reports
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h3">{% block page_title %}{% endblock %}</h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    {% block page_actions %}{% endblock %}
+                </div>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            <i class="fas {% if category == 'success' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %} me-2"></i>
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            {% block shop_content %}{% endblock %}
+        </main>
+    </div>
+</div>
+{% endblock %}

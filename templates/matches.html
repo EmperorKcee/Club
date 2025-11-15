@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block title %}Matches - Football Club Management{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Matches</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{{ url_for('add_match') }}" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i> Add Match
+        </a>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form class="row g-3">
+            <div class="col-md-4">
+                <label for="status" class="form-label">Status</label>
+                <select class="form-select" id="status" name="status">
+                    <option value="">All Status</option>
+                    <option value="scheduled" {% if status == 'scheduled' %}selected{% endif %}>Scheduled</option>
+                    <option value="ongoing" {% if status == 'ongoing' %}selected{% endif %}>Ongoing</option>
+                    <option value="completed" {% if status == 'completed' %}selected{% endif %}>Completed</option>
+                    <option value="postponed" {% if status == 'postponed' %}selected{% endif %}>Postponed</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="competition" class="form-label">Competition</label>
+                <select class="form-select" id="competition" name="competition">
+                    <option value="">All Competitions</option>
+                    {% for comp in competitions %}
+                    <option value="{{ comp }}" {% if competition == comp %}selected{% endif %}>{{ comp }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary me-2">
+                    <i class="fas fa-filter me-1"></i> Filter
+                </button>
+                <a href="{{ url_for('matches') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-sync-alt"></i>
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Matches Table -->
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Date & Time</th>
+                    <th>Match</th>
+                    <th>Competition</th>
+                    <th>Venue</th>
+                    <th>Status</th>
+                    <th>Score</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for match in matches %}
+                <tr>
+                    <td class="align-middle">{{ match.match_date.strftime('%d %b %Y, %H:%M') }}</td>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <!-- Home Team -->
+                            <div class="d-flex align-items-center me-3">
+                                {% set home_logo = team_settings.logo_url if team_settings and team_settings.logo_url else 'img/logo.png' %}
+                                <div class="position-relative me-2" style="width: 32px; height: 32px;">
+                                    <img src="{{ url_for('static', filename=home_logo) }}" 
+                                         alt="{{ team_settings.team_name if team_settings else 'Home Team' }}" 
+                                         class="img-fluid" 
+                                         style="height: 100%; width: 100%; object-fit: contain; border-radius: 4px; border: 1px solid #dee2e6;"
+                                         onerror="this.onerror=null; this.src='{{ url_for('static', filename='img/logo.png') }}';">
+                                </div>
+                                <span class="fw-bold">{{ team_settings.team_name if team_settings else 'Home Team' }}</span>
+                            </div>
+                            
+                            <div class="mx-3 text-muted fw-bold">vs</div>
+                            
+                            <!-- Away Team (Opponent) -->
+                            <div class="d-flex align-items-center">
+                                <div class="position-relative me-2" style="width: 32px; height: 32px; flex-shrink: 0;">
+                                    {% if match.opponent_logo %}
+                                        <img src="{{ url_for('uploaded_team_logo', filename=match.opponent_logo.split('/')[-1]) }}" 
+                                             alt="{{ match.opponent }}" 
+                                             class="img-fluid" 
+                                             style="height: 100%; width: 100%; object-fit: contain; border-radius: 4px; border: 1px solid #dee2e6;"
+                                             onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <div class="w-100 h-100 d-none align-items-center justify-content-center" 
+                                             style="background-color: #f8f9fa; border-radius: 4px; border: 1px solid #dee2e6;">
+                                            <i class="fas fa-shield-alt text-muted"></i>
+                                        </div>
+                                    {% else %}
+                                        <div class="w-100 h-100 d-flex align-items-center justify-content-center" 
+                                             style="background-color: #f8f9fa; border-radius: 4px; border: 1px solid #dee2e6;">
+                                            <i class="fas fa-shield-alt text-muted"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <span class="fw-bold">{{ match.opponent }}</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td>{{ match.competition or 'Friendly' }}</td>
+                    <td class="align-middle">
+                        {{ match.venue }}
+                    </td>
+                    <td>
+                        {% if match.status == 'scheduled' %}
+                            <span class="badge bg-info">Scheduled</span>
+                        {% elif match.status == 'ongoing' %}
+                            <span class="badge bg-warning">Ongoing</span>
+                        {% elif match.status == 'completed' %}
+                            <span class="badge bg-success">Completed</span>
+                        {% elif match.status == 'postponed' %}
+                            <span class="badge bg-secondary">Postponed</span>
+                        {% else %}
+                            <span class="badge bg-light text-dark">{{ match.status|title }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if match.status == 'completed' %}
+                            <span class="badge bg-light text-dark fs-6">{{ team_settings.team_name if team_settings else 'Home Team' }} {{ match.home_goals }} - {{ match.away_goals }} {{ match.opponent }}</span>
+                        {% else %}
+                            <span class="text-muted">vs</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="btn-group btn-group-sm">
+                            <a href="{{ url_for('view_match', match_id=match.id) }}" class="btn btn-outline-primary" title="View">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{{ url_for('edit_match', match_id=match.id) }}" class="btn btn-outline-secondary" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="{{ url_for('match_flyer', match_id=match.id) }}" class="btn btn-outline-success" title="Download Flyer" target="_blank">
+                                <i class="fas fa-download"></i>
+                            </a>
+                            <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ match.id }}" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                        
+                        <!-- Delete Confirmation Modal -->
+                        <div class="modal fade" id="deleteModal{{ match.id }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Confirm Delete</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>Are you sure you want to delete this match?</p>
+                                        <p><strong>{{ team_settings.team_name if team_settings else 'Home Team' }} vs {{ match.opponent }}</strong><br>
+                                        {{ match.match_date.strftime('%d %b %Y, %H:%M') }} - {{ match.competition or 'Friendly' }}</p>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                        <form method="POST" action="{{ url_for('delete_match', match_id=match.id) }}" style="display: inline;">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit" class="btn btn-danger" 
+                                                    onclick="return confirm('Are you sure you want to delete this match?');">
+                                                <i class="fas fa-trash"></i> Delete
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" class="text-center py-4">
+                        <div class="text-muted">No matches found. <a href="{{ url_for('add_match') }}">Add a new match</a> to get started.</div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends "fans/base.html" %}
+
+{% block fan_content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="text-center mb-5">
+                <h1 class="display-5 fw-bold text-primary mb-3">Fan Benefits</h1>
+                <p class="lead">Exclusive perks and benefits for our valued fans</p>
+                <div class="border-bottom mx-auto" style="width: 100px; height: 4px; background: linear-gradient(135deg, hsl(219, 85%, 15%) 0%, #2468df 100%);"></div>
+            </div>
+
+            <div class="row g-4">
+                {% for benefit in benefits %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="card fan-card h-100 border-0">
+                        <div class="card-body text-center p-4">
+                            <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-4" 
+                                 style="width: 80px; height: 80px;">
+                                <i class="fas fa-{{ benefit.icon }} fa-2x text-primary"></i>
+                            </div>
+                            <h4 class="h5 mb-3">{{ benefit.title }}</h4>
+                            <p class="text-muted">{{ benefit.description }}</p>
+                            {% if benefit.title == 'Exclusive Discounts' %}
+                                <a href="{{ url_for('fans.tickets') }}" class="btn btn-outline-primary mt-2">View Offers</a>
+                            {% elif benefit.title == 'Matchday Experience' %}
+                                <a href="{{ url_for('fans.events') }}" class="btn btn-outline-primary mt-2">Learn More</a>
+                            {% elif benefit.title == 'Community' %}
+                                <a href="{{ url_for('fans.community') }}" class="btn btn-outline-primary mt-2">Join Now</a>
+                            {% elif benefit.title == 'Newsletter' %}
+                                <a href="#newsletter" class="btn btn-outline-primary mt-2">Subscribe</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="mt-5 pt-4 text-center">
+                <div class="card bg-light border-0 p-4">
+                    <h3 class="h4 mb-3">Become a Premium Member</h3>
+                    <p class="text-muted mb-4">Unlock all benefits and enjoy exclusive privileges as a premium member.</p>
+                    <a href="#" class="btn btn-primary px-4">Upgrade Now</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

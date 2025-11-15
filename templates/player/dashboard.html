@@ -1,0 +1,396 @@
+{% extends "player/base.html" %}
+
+{% block title %}My Dashboard - {{ team_settings.team_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .player-hero {
+        background: var(--player-hero-bg, linear-gradient(135deg, #1a2a6c 0%, #1a2a6c 100%));
+        color: white;
+        border-radius: 15px;
+        position: relative;
+        overflow: hidden;
+        margin: 0 -15px;
+        border-radius: 0;
+    }
+    
+    @media (min-width: 768px) {
+        .player-hero {
+            margin: 0;
+            border-radius: 15px;
+        }
+    }
+    
+    /* Set the primary color variable */
+    :root {
+        --player-primary: {{ team_settings.primary_color|default('#1a2a6c') }};
+        --player-hero-bg: linear-gradient(135deg, var(--player-primary) 0%, #1a2a6c 100%);
+    }
+    .player-hero::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29-22c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM32 63c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zm57-13c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='rgba(255,255,255,0.1)' fill-rule='evenodd'/%3E%3C/svg%3E");
+        opacity: 0.1;
+    }
+    .stat-card {
+        border: none;
+        border-radius: 12px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        height: 100%;
+        margin-bottom: 1rem;
+    }
+    
+    @media (min-width: 768px) {
+        .stat-card {
+            margin-bottom: 0;
+        }
+    }
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        min-width: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+    .upcoming-card {
+        border-left: 4px solid var(--player-primary);
+        transition: all 0.3s ease;
+    }
+    .upcoming-card:hover {
+        transform: translateX(5px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    }
+    .player-jersey {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: var(--player-primary);
+        text-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    /* Mobile optimizations */
+    @media (max-width: 767.98px) {
+        .player-hero {
+            padding: 1.5rem 1rem !important;
+        }
+        
+        .player-hero h1 {
+            font-size: 1.75rem !important;
+        }
+        
+        .player-hero .lead {
+            font-size: 1rem;
+        }
+        
+        .stat-card {
+            margin-bottom: 1rem;
+        }
+        
+        .upcoming-card {
+            margin-bottom: 1.5rem;
+        }
+        
+        .btn {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.9rem;
+        }
+        
+        .card-body {
+            padding: 1rem;
+        }
+        
+        .card-header h5 {
+            font-size: 1.1rem;
+        }
+    }
+    
+    /* Make sure tables are scrollable on mobile */
+    .table-responsive {
+        display: block;
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Improve touch targets */
+    .btn, a.btn {
+        min-width: 44px;
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Player Hero Section -->
+<div class="player-hero p-4 mb-4">
+    <div class="container-fluid">
+        <div class="row align-items-center">
+            <div class="col-8 col-md-8">
+                <h1 class="h2 fw-bold mb-2">Welcome, {{ player.first_name }}!</h1>
+                <p class="lead mb-3 d-none d-md-block">Stay updated with your team's latest activities</p>
+                <div class="d-flex align-items-center">
+                    <div class="bg-white text-{{ team_settings.primary_color }} rounded-circle d-flex align-items-center justify-content-center me-3" style="min-width: 50px; width: 50px; height: 50px;">
+                        <span class="player-jersey" style="font-size: 1.5rem;">{{ player.jersey_number }}</span>
+                    </div>
+                    <div>
+                        <h5 class="mb-0">{{ player.position }}</h5>
+                        <p class="mb-0 small">{{ team_settings.team_name }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-4 col-md-4 text-end mt-0 mt-md-0">
+                {% if player.photo_url %}
+                {% set photo_url = player.photo_url if player.photo_url.startswith(('http://', 'https://')) else url_for('static', filename=player.photo_url) %}
+                <img src="{{ photo_url }}" 
+                     alt="{{ player.full_name }}" 
+                     class="img-fluid rounded-circle border border-3 border-white"
+                     style="width: 80px; height: 80px; object-fit: cover;"
+                     onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center" 
+                     style="width: 80px; height: 80px; border: 3px solid white; display: none;">
+                    <i class="fas fa-user fa-3x text-muted"></i>
+                </div>
+                {% else %}
+                <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center" 
+                     style="width: 80px; height: 80px; border: 3px solid white;">
+                    <i class="fas fa-user fa-3x text-muted"></i>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Stats -->
+<div class="row g-3 g-md-4 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="card stat-card bg-primary text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="mb-0">{{ upcoming_trainings|length }}</h4>
+                        <p class="mb-0">Upcoming Training</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-dumbbell fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card bg-success text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="mb-0">{{ upcoming_matches|length }}</h4>
+                        <p class="mb-0">Upcoming Matches</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-futbol fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card bg-info text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="mb-0">{{ player.stats.goals or 0 }}</h4>
+                        <p class="mb-0">Goals This Season</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-trophy fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card bg-warning text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="mb-0">{{ player.stats.matches_played or 0 }}</h4>
+                        <p class="mb-0">Matches Played</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-calendar-check fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 g-md-4">
+    <!-- Recent News -->
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-newspaper me-2"></i>Latest News
+                </h5>
+                <a href="{{ url_for('player_news') }}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body">
+                {% if recent_news %}
+                    {% for news in recent_news %}
+                    <div class="d-flex mb-3 {% if not loop.last %}border-bottom pb-3{% endif %}">
+                    {% if news.image_url %}
+                    {% set news_image_url = news.image_url if news.image_url.startswith(('http://', 'https://')) else url_for('static', filename=news.image_url) %}
+                    <img src="{{ news_image_url }}" 
+                         alt="{{ news.title }}" 
+                         class="rounded me-2 me-sm-3" 
+                         style="width: 50px; height: 50px; min-width: 50px; object-fit: cover;"
+                         onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="bg-light rounded me-2 me-sm-3 d-none align-items-center justify-content-center" style="width: 50px; height: 50px; min-width: 50px;">
+                        <i class="fas fa-newspaper text-muted"></i>
+                    </div>
+                    {% else %}
+                    <div class="bg-light rounded me-2 me-sm-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; min-width: 50px;">
+                        <i class="fas fa-newspaper text-muted"></i>
+                    </div>
+                    {% endif %}
+                    <div class="flex-grow-1 overflow-hidden">
+                        <h6 class="mb-1 text-truncate">{{ news.title }}</h6>
+                        <p class="text-muted small mb-1 d-none d-sm-block">{{ news.summary[:80] }}{% if news.summary|length > 80 %}...{% endif %}</p>
+                        <small class="text-muted">{{ news.formatted_date }}</small>
+                    </div>
+                </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-newspaper fa-3x mb-3 opacity-50"></i>
+                        <p>No recent news available</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Upcoming Training -->
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-dumbbell me-2"></i>Upcoming Training
+                </h5>
+                <a href="{{ url_for('player_training') }}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body">
+                {% if upcoming_trainings %}
+                    {% for training in upcoming_trainings %}
+                    <div class="d-flex align-items-center mb-3 {% if not loop.last %}border-bottom pb-3{% endif %}">
+                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2 me-sm-3" style="width: 45px; height: 45px; min-width: 45px;">
+                            <i class="fas fa-dumbbell"></i>
+                        </div>
+                        <div class="flex-grow-1 overflow-hidden">
+                            <h6 class="mb-1 text-truncate">{{ training.title }}</h6>
+                            <p class="text-muted small mb-1">{{ training.location }}</p>
+                            <div class="d-flex align-items-center justify-content-between">
+                                <small class="text-primary fw-semibold">{{ training.formatted_date }}</small>
+                                {% if training.is_mandatory %}
+                                <span class="badge bg-warning text-dark ms-2">Mandatory</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-dumbbell fa-3x mb-3 opacity-50"></i>
+                        <p>No upcoming training sessions</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Upcoming Matches -->
+{% if upcoming_matches %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-futbol me-2"></i>Upcoming Matches
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    {% for match in upcoming_matches %}
+                    <div class="col-12 col-sm-6 col-md-4">
+                        <div class="card border-primary h-100">
+                            <div class="card-body text-center">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <div class="text-center flex-grow-1">
+                                        {% if team_settings.logo_url %}
+                                        <img src="{{ url_for('static', filename=team_settings.logo_url) }}" 
+                                             alt="{{ team_settings.team_name }}" 
+                                             class="mb-2 img-fluid" 
+                                             style="max-width: 40px; max-height: 40px;"
+                                             onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <div class="bg-light rounded mb-2 d-none align-items-center justify-content-center mx-auto" style="width: 40px; height: 40px;">
+                                            <i class="fas fa-shield-alt text-muted"></i>
+                                        </div>
+                                        {% else %}
+                                        <div class="bg-light rounded mb-2 d-flex align-items-center justify-content-center mx-auto" style="width: 40px; height: 40px;">
+                                            <i class="fas fa-shield-alt text-muted"></i>
+                                        </div>
+                                        {% endif %}
+                                        <div class="small fw-bold text-truncate">{{ team_settings.team_name }}</div>
+                                    </div>
+                                    <div class="text-center px-2">
+                                        <div class="fw-bold text-primary">VS</div>
+                                    </div>
+                                    <div class="text-center flex-grow-1">
+                                        {% if match.opponent_logo %}
+                                        <img src="{{ url_for('static', filename=match.opponent_logo) }}" 
+                                             alt="{{ match.opponent }}" 
+                                             class="mb-2 img-fluid" 
+                                             style="max-width: 40px; max-height: 40px;"
+                                             onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <div class="bg-light rounded mb-2 d-none align-items-center justify-content-center mx-auto" style="width: 40px; height: 40px;">
+                                            <i class="fas fa-shield-alt text-muted"></i>
+                                        </div>
+                                        {% else %}
+                                        <div class="bg-light rounded mb-2 d-flex align-items-center justify-content-center mx-auto" style="width: 40px; height: 40px;">
+                                            <i class="fas fa-shield-alt text-muted"></i>
+                                        </div>
+                                        {% endif %}
+                                        <div class="small fw-bold text-truncate">{{ match.opponent }}</div>
+                                    </div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="fw-bold">{{ match.match_date.strftime('%d %b %Y') }}</div>
+                                    <div class="text-muted">{{ match.match_date.strftime('%H:%M') }}</div>
+                                    <span class="badge bg-primary mt-2">{{ match.venue|title }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

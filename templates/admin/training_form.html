@@ -1,0 +1,138 @@
+{% extends "admin/base.html" %}
+
+{% block admin_content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3">
+    <h1 class="h2">{{ title }}</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{{ url_for('admin.manage_trainings') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Back to Trainings
+        </a>
+    </div>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<div class="card">
+    <div class="card-body">
+        <form method="POST" action="">
+            {{ form.hidden_tag() }}
+            
+            <div class="row mb-3">
+                <div class="col-md-8">
+                    {{ form.title.label(class="form-label") }}
+                    {{ form.title(class="form-control" + (' is-invalid' if form.title.errors else '')) }}
+                    {% for error in form.title.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <div class="col-md-4">
+                    {{ form.coach_id.label(class="form-label") }}
+                    {{ form.coach_id(class="form-select" + (' is-invalid' if form.coach_id.errors else '')) }}
+                    {% for error in form.coach_id.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    {{ form.session_date.label(class="form-label") }}
+                    {{ form.session_date(class="form-control" + (' is-invalid' if form.session_date.errors else '')) }}
+                    {% for error in form.session_date.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <div class="col-md-3">
+                    {{ form.duration_minutes.label(class="form-label") }}
+                    <div class="input-group">
+                        {{ form.duration_minutes(class="form-control" + (' is-invalid' if form.duration_minutes.errors else '')) }}
+                        <span class="input-group-text">minutes</span>
+                        {% for error in form.duration_minutes.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    {{ form.session_type.label(class="form-label") }}
+                    {{ form.session_type(class="form-select" + (' is-invalid' if form.session_type.errors else '')) }}
+                    {% for error in form.session_type.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-9">
+                    {{ form.location.label(class="form-label") }}
+                    {{ form.location(class="form-control" + (' is-invalid' if form.location.errors else '')) }}
+                    {% for error in form.location.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <div class="form-check form-switch">
+                        {{ form.is_mandatory(class="form-check-input" + (' is-invalid' if form.is_mandatory.errors else ''), role="switch") }}
+                        {{ form.is_mandatory.label(class="form-check-label") }}
+                        {% for error in form.is_mandatory.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                {{ form.description.label(class="form-label") }}
+                {{ form.description(class="form-control" + (' is-invalid' if form.description.errors else ''), rows=3) }}
+                {% for error in form.description.errors %}
+                    <div class="invalid-feedback">{{ error }}</div>
+                {% endfor %}
+            </div>
+            
+            <div class="mb-3">
+                {{ form.notes.label(class="form-label") }}
+                {{ form.notes(class="form-control" + (' is-invalid' if form.notes.errors else ''), rows=3) }}
+                <div class="form-text">Internal notes (not visible to players)</div>
+                {% for error in form.notes.errors %}
+                    <div class="invalid-feedback">{{ error }}</div>
+                {% endfor %}
+            </div>
+            
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                <a href="{{ url_for('admin.manage_trainings') }}" class="btn btn-outline-secondary me-md-2">
+                    <i class="fas fa-times me-1"></i> Cancel
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-1"></i> {{ submit_text }}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    // Initialize datetime picker
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add any client-side validation or UI enhancements here
+        const durationInput = document.getElementById('{{ form.duration_minutes.id }}');
+        if (durationInput) {
+            durationInput.addEventListener('change', function() {
+                let value = parseInt(this.value);
+                if (value < 15) this.value = 15;
+                if (value > 240) this.value = 240;
+            });
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,167 @@
+{% extends 'fans/base.html' %}
+
+{% block title %}Subscribe to Our Newsletter - {{ team_settings.team_name }} Fan Zone{% endblock %}
+
+{% block content %}
+<!-- Subscribe Page Header -->
+<header class="fan-zone-header mb-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-12 text-center">
+                <h1 class="display-4 mb-3">Subscribe to Our Newsletter</h1>
+                <p class="lead">Stay updated with the latest news, events, and exclusive offers</p>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">Newsletter Subscription</h3>
+                </div>
+                <div class="card-body p-4">
+                    <div id="subscriptionMessage" class="alert d-none mb-4"></div>
+                    
+                    <form id="newsletterForm">
+                        <div class="mb-4">
+                            <p class="text-muted">Join our community of fans and never miss an update from {{ team_settings.team_name }}. We'll send you the latest news, match updates, and exclusive offers directly to your inbox.</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="subscriberName" class="form-label">Your Name (Optional)</label>
+                            <input type="text" class="form-control form-control-lg" id="subscriberName" placeholder="Enter your name">
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="subscriberEmail" class="form-label">Email Address <span class="text-danger">*</span></label>
+                            <input type="email" class="form-control form-control-lg" id="subscriberEmail" placeholder="Enter your email" required>
+                            <div class="invalid-feedback">Please provide a valid email address.</div>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg" id="subscribeBtn">
+                                <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                                Subscribe Now
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <div class="mt-4 text-center">
+                        <p class="text-muted small mb-0">We respect your privacy. Unsubscribe at any time.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-5">
+                <h4 class="mb-3">Why Subscribe?</h4>
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <div class="h-100 p-3 border rounded-3">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-bell me-2 text-primary"></i>
+                                <h5 class="mb-0">Match Updates</h5>
+                            </div>
+                            <p class="mb-0">Get the latest match schedules, results, and highlights delivered to your inbox.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="h-100 p-3 border rounded-3">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-ticket-alt me-2 text-primary"></i>
+                                <h5 class="mb-0">Ticket Alerts</h5>
+                            </div>
+                            <p class="mb-0">Be the first to know when tickets for upcoming matches go on sale.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="h-100 p-3 border rounded-3">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-gift me-2 text-primary"></i>
+                                <h5 class="mb-0">Exclusive Offers</h5>
+                            </div>
+                            <p class="mb-0">Receive special discounts and offers available only to our subscribers.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const newsletterForm = document.getElementById('newsletterForm');
+        if (newsletterForm) {
+            newsletterForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const email = document.getElementById('subscriberEmail').value.trim();
+                const name = document.getElementById('subscriberName').value.trim();
+                const subscribeBtn = document.getElementById('subscribeBtn');
+                const spinner = subscribeBtn.querySelector('.spinner-border');
+                const messageDiv = document.getElementById('subscriptionMessage');
+                
+                // Reset previous messages
+                messageDiv.className = 'alert d-none';
+                
+                // Validate email
+                if (!email) {
+                    showMessage('Please enter your email address', 'danger');
+                    return;
+                }
+                
+                // Show loading state
+                subscribeBtn.disabled = true;
+                spinner.classList.remove('d-none');
+                
+                // Send subscription request
+                fetch('{{ url_for("fans.subscribe") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        name: name
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Show success/error message
+                    showMessage(data.message, data.success ? 'success' : 'danger');
+                    
+                    if (data.success) {
+                        // Clear form on success
+                        newsletterForm.reset();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showMessage('An error occurred. Please try again later.', 'danger');
+                })
+                .finally(() => {
+                    // Reset button state
+                    subscribeBtn.disabled = false;
+                    spinner.classList.add('d-none');
+                });
+            });
+        }
+        
+        function showMessage(message, type) {
+            const messageDiv = document.getElementById('subscriptionMessage');
+            messageDiv.textContent = message;
+            messageDiv.className = `alert alert-${type} mb-4`;
+            
+            // Scroll to message
+            messageDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    });
+</script>
+{% endblock %}

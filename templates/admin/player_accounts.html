@@ -1,0 +1,886 @@
+{% extends "base.html" %}
+
+{% block title %}Player Accounts - Admin{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Player Account Management</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{{ url_for('players') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-users me-1"></i> Manage Players
+            </a>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary">
+                <i class="fas fa-tachometer-alt me-1"></i> Dashboard
+            </a>
+        </div>
+        <div class="btn-group">
+            {% if players_with_accounts|rejectattr('1')|list|length > 0 %}
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPlayerAccountModal">
+                <i class="fas fa-user-plus me-1"></i> Add Player Account
+            </button>
+            {% endif %}
+            {% if players_with_accounts|rejectattr('1')|list|length > 0 %}
+            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#quickCreateModal">
+                <i class="fas fa-magic me-1"></i> Create Missing Accounts
+            </button>
+            {% endif %}
+ 
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="mb-0">{{ players_with_accounts|selectattr('1')|list|length }}</h4>
+                        <p class="mb-0">Active Accounts</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-user-check fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="mb-0">{{ players_with_accounts|rejectattr('1')|list|length }}</h4>
+                        <p class="mb-0">No Account</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-user-times fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="mb-0">{{ players_with_accounts|length }}</h4>
+                        <p class="mb-0">Total Players</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-users fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        {% set active_accounts = players_with_accounts|selectattr('1')|selectattr('1.is_active')|list|length %}
+                        <h4 class="mb-0">{{ active_accounts }}</h4>
+                        <p class="mb-0">Active Logins</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-sign-in-alt fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Search and Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label for="search" class="form-label">Search Accounts</label>
+                <div class="input-group">
+                    <input type="text" class="form-control" id="search" placeholder="Search by name, username, or email..." onkeyup="filterAccounts()">
+                    <button class="btn btn-outline-secondary" type="button">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <label for="accountStatus" class="form-label">Account Status</label>
+                <select class="form-select" id="accountStatus" onchange="filterAccounts()">
+                    <option value="">All Accounts</option>
+                    <option value="active">Active Accounts</option>
+                    <option value="disabled">Disabled Accounts</option>
+                    <option value="no-account">No Account</option>
+                    <option value="never-logged">Never Logged In</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="position" class="form-label">Position</label>
+                <select class="form-select" id="position" onchange="filterAccounts()">
+                    <option value="">All Positions</option>
+                    <option value="GK">Goalkeeper</option>
+                    <option value="DF">Defender</option>
+                    <option value="MF">Midfielder</option>
+                    <option value="FW">Forward</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="button" class="btn btn-outline-secondary w-100" onclick="resetFilters()">
+                    <i class="fas fa-sync-alt me-1"></i> Reset
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk Actions Toolbar -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                    <label class="form-check-label" for="selectAll">
+                        Select All
+                    </label>
+                </div>
+                <span id="selectedCount" class="text-muted">0 selected</span>
+            </div>
+            <div class="btn-group" id="bulkActions" style="display: none;">
+                <button type="button" class="btn btn-success btn-sm" onclick="bulkEnableAccounts()">
+                    <i class="fas fa-check me-1"></i> Enable Selected
+                </button>
+                <button type="button" class="btn btn-warning btn-sm" onclick="bulkDisableAccounts()">
+                    <i class="fas fa-pause me-1"></i> Disable Selected
+                </button>
+                <button type="button" class="btn btn-info btn-sm" onclick="exportSelectedCredentials()">
+                    <i class="fas fa-download me-1"></i> Export Credentials
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Player Accounts</h5>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th width="40">
+                        <input type="checkbox" class="form-check-input" id="selectAllTable" onchange="toggleSelectAllTable()">
+                    </th>
+                    <th>Player</th>
+                    <th>Position</th>
+                    <th>Account Status</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Last Login</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for player, player_user in players_with_accounts %}
+                <tr id="player-{{ player.id }}" class="player-row" 
+                    data-player-name="{{ player.full_name.lower() }}"
+                    data-username="{{ player_user.username.lower() if player_user else '' }}"
+                    data-email="{{ player_user.email.lower() if player_user else '' }}"
+                    data-position="{{ player.position }}"
+                    data-account-status="{% if player_user %}{% if player_user.is_active %}active{% else %}disabled{% endif %}{% else %}no-account{% endif %}"
+                    data-last-login="{% if player_user and player_user.last_login %}logged{% else %}never-logged{% endif %}">
+                    <td>
+                        {% if player_user %}
+                        <input type="checkbox" class="form-check-input row-checkbox" value="{{ player_user.id }}" onchange="updateSelectedCount()">
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            {% if player.photo_url %}
+                            <img src="{{ url_for('static', filename=player.photo_url) }}" 
+                                 alt="{{ player.full_name }}" 
+                                 class="rounded-circle me-2" 
+                                 width="40" 
+                                 height="40" 
+                                 style="object-fit: cover;"
+                                 onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div class="bg-light rounded-circle me-2 align-items-center justify-content-center" style="width: 40px; height: 40px; display: none;">
+                                <i class="fas fa-user text-muted"></i>
+                            </div>
+                            {% else %}
+                            <div class="bg-light rounded-circle me-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                <i class="fas fa-user text-muted"></i>
+                            </div>
+                            {% endif %}
+                            <div>
+                                <h6 class="mb-0">{{ player.full_name }}</h6>
+                                <small class="text-muted">#{{ player.jersey_number }}</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="badge bg-info">{{ player.position }}</span>
+                    </td>
+                    <td>
+                        {% if player_user %}
+                            {% if player_user.is_active %}
+                            <span class="badge bg-success">
+                                <i class="fas fa-check me-1"></i>Active
+                            </span>
+                            {% else %}
+                            <span class="badge bg-warning text-dark">
+                                <i class="fas fa-pause me-1"></i>Disabled
+                            </span>
+                            {% endif %}
+                        {% else %}
+                        <span class="badge bg-danger">
+                            <i class="fas fa-times me-1"></i>No Account
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if player_user %}
+                        <code>{{ player_user.username }}</code>
+                        {% else %}
+                        <span class="text-muted">-</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if player_user %}
+                        {{ player_user.email }}
+                        {% else %}
+                        <span class="text-muted">-</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if player_user and player_user.last_login %}
+                        <small>{{ player_user.last_login.strftime('%d %b %Y, %H:%M') }}</small>
+                        {% else %}
+                        <span class="text-muted">Never</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="btn-group btn-group-sm">
+                            {% if player_user %}
+                            <a href="{{ url_for('edit_player_account', player_user_id=player_user.id) }}" class="btn btn-outline-primary" title="Edit Account">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#resetPasswordModal{{ player_user.id }}" title="Reset Password">
+                                <i class="fas fa-key"></i>
+                            </button>
+                            <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteAccountModal{{ player_user.id }}" title="Delete Account">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            {% else %}
+                            <a href="{{ url_for('create_player_account', player_id=player.id) }}" class="btn btn-success btn-sm">
+                                <i class="fas fa-plus me-1"></i>Create Account
+                            </a>
+                            {% endif %}
+                        </div>
+
+                        {% if player_user %}
+                        <!-- Reset Password Modal -->
+                        <div class="modal fade" id="resetPasswordModal{{ player_user.id }}" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Reset Password</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>Are you sure you want to reset the password for <strong>{{ player.full_name }}</strong>?</p>
+                                        <p class="text-muted">A new password will be generated automatically and displayed after reset.</p>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                        <form action="{{ url_for('reset_player_password', player_user_id=player_user.id) }}" method="POST" class="d-inline">
+                                            <button type="submit" class="btn btn-warning">Reset Password</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Delete Account Modal -->
+                        <div class="modal fade" id="deleteAccountModal{{ player_user.id }}" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Delete Account</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>Are you sure you want to delete the player account for <strong>{{ player.full_name }}</strong>?</p>
+                                        <p class="text-danger"><i class="fas fa-exclamation-triangle me-1"></i>This action cannot be undone. The player will lose access to the player portal.</p>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                        <form action="{{ url_for('delete_player_account', player_user_id=player_user.id) }}" method="POST" class="d-inline">
+                                            <button type="submit" class="btn btn-danger">Delete Account</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" class="text-center py-4">
+                        <div class="text-muted">
+                            <i class="fas fa-users fa-3x mb-3"></i>
+                            <h5>No players found</h5>
+                            <p class="mb-0">Add players first to create their accounts</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Bulk Actions -->
+{% if players_with_accounts|rejectattr('1')|list|length > 0 %}
+<div class="card mt-4">
+    <div class="card-header">
+        <h5 class="mb-0">Bulk Actions</h5>
+    </div>
+    <div class="card-body">
+        <p class="text-muted">Create accounts for all players who don't have one yet.</p>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#bulkCreateModal">
+            <i class="fas fa-users me-1"></i>Create All Missing Accounts
+        </button>
+    </div>
+</div>
+
+<!-- Bulk Create Modal -->
+<div class="modal fade" id="bulkCreateModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create All Missing Accounts</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>This will create player accounts for all players who don't have one yet:</p>
+                <ul class="list-group">
+                    {% for player, player_user in players_with_accounts %}
+                        {% if not player_user %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            {{ player.full_name }}
+                            <small class="text-muted">{{ player.first_name.lower() }}.{{ player.last_name.lower() }}</small>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+                </ul>
+                <p class="text-muted mt-3">Usernames and passwords will be auto-generated and displayed after creation.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form action="{{ url_for('bulk_create_player_accounts') }}" method="POST" class="d-inline">
+                    <button type="submit" class="btn btn-primary">Create All Accounts</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Player Account Modal -->
+<div class="modal fade" id="addPlayerAccountModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Player Account</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addPlayerAccountForm" method="POST" action="{{ url_for('create_player_account_from_modal') }}">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="player_select" class="form-label">Select Player <span class="text-danger">*</span></label>
+                            <select class="form-select" id="player_select" name="player_id" required onchange="updatePlayerInfo()">
+                                <option value="">Choose a player...</option>
+                                {% set players_without_accounts = players_with_accounts|rejectattr('1')|list %}
+                                {% if players_without_accounts %}
+                                    {% for player, player_user in players_without_accounts %}
+                                    <option value="{{ player.id }}" 
+                                            data-name="{{ player.full_name }}"
+                                            data-jersey="{{ player.jersey_number }}"
+                                            data-position="{{ player.position }}"
+                                            data-email="{{ player.email or '' }}"
+                                            data-photo="{{ player.photo_url or '' }}">
+                                        {{ player.full_name }} (#{{ player.jersey_number }})
+                                    </option>
+                                    {% endfor %}
+                                {% else %}
+                                    <option value="" disabled>All players already have accounts</option>
+                                {% endif %}
+                            </select>
+                            <div class="form-text">Only players without accounts are shown</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Player Preview</label>
+                            <div id="playerPreview" class="border rounded p-3 text-center" style="min-height: 120px; display: flex; align-items: center; justify-content: center;">
+                                <span class="text-muted">Select a player to see preview</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="modal_username" class="form-label">Username <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="modal_username" name="username" required>
+                            <div class="form-text">This will be used to login to the player portal</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="modal_email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="modal_email" name="email">
+                            <div class="form-text">Player's email address</div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="modal_password" class="form-label">Password <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="modal_password" name="password" required>
+                                <button class="btn btn-outline-secondary" type="button" onclick="toggleModalPassword()">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <div class="form-text">Temporary password for the player</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Password Suggestions</label>
+                            <div class="d-flex gap-2 flex-wrap">
+                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="setModalPassword('suggested1')" id="suggestion1">
+                                    Select player first
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="setModalPassword('suggested2')" id="suggestion2">
+                                    Select player first
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="generateModalRandomPassword()">
+                                    Generate Random
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Note:</strong> Make sure to share these credentials securely with the player. 
+                        They can change their password after first login.
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" form="addPlayerAccountForm" class="btn btn-primary">
+                    <i class="fas fa-user-plus me-1"></i> Create Account
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Create Modal -->
+<div class="modal fade" id="quickCreateModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Quick Create Missing Accounts</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>This will quickly create accounts for all players who don't have one yet:</p>
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Auto-generated credentials:</strong>
+                    <ul class="mb-0 mt-2">
+                        <li>Username: firstname.lastname</li>
+                        <li>Password: firstname + jersey number</li>
+                        <li>Email: username@{{ team_settings.contact_email.split('@')[1] if team_settings and team_settings.contact_email else 'zambiafc.com' }}</li>
+                    </ul>
+                </div>
+                <p class="text-muted">You can edit these credentials after creation if needed.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form action="{{ url_for('bulk_create_player_accounts') }}" method="POST" class="d-inline">
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-magic me-1"></i>Create All Accounts
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Global variables
+let selectedAccounts = new Set();
+
+// Filter accounts function
+function filterAccounts() {
+    const searchTerm = document.getElementById('search').value.toLowerCase();
+    const accountStatus = document.getElementById('accountStatus').value;
+    const position = document.getElementById('position').value;
+    
+    const rows = document.querySelectorAll('.player-row');
+    let visibleCount = 0;
+    
+    rows.forEach(row => {
+        const playerName = row.dataset.playerName;
+        const username = row.dataset.username;
+        const email = row.dataset.email;
+        const rowPosition = row.dataset.position;
+        const rowAccountStatus = row.dataset.accountStatus;
+        const lastLogin = row.dataset.lastLogin;
+        
+        // Search filter
+        const matchesSearch = !searchTerm || 
+            playerName.includes(searchTerm) || 
+            username.includes(searchTerm) || 
+            email.includes(searchTerm);
+        
+        // Account status filter
+        const matchesAccountStatus = !accountStatus || 
+            rowAccountStatus === accountStatus ||
+            (accountStatus === 'never-logged' && lastLogin === 'never-logged');
+        
+        // Position filter
+        const matchesPosition = !position || rowPosition === position;
+        
+        if (matchesSearch && matchesAccountStatus && matchesPosition) {
+            row.style.display = '';
+            visibleCount++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+    
+    // Update visible count
+    updateVisibleCount(visibleCount);
+}
+
+// Reset filters
+function resetFilters() {
+    document.getElementById('search').value = '';
+    document.getElementById('accountStatus').value = '';
+    document.getElementById('position').value = '';
+    filterAccounts();
+}
+
+// Update visible count
+function updateVisibleCount(count) {
+    const totalRows = document.querySelectorAll('.player-row').length;
+    // You can add a count display here if needed
+}
+
+// Toggle select all
+function toggleSelectAll() {
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.row-checkbox:not([style*="display: none"])');
+    
+    checkboxes.forEach(checkbox => {
+        if (checkbox.closest('tr').style.display !== 'none') {
+            checkbox.checked = selectAll.checked;
+        }
+    });
+    
+    updateSelectedCount();
+}
+
+// Toggle select all in table header
+function toggleSelectAllTable() {
+    const selectAllTable = document.getElementById('selectAllTable');
+    const selectAll = document.getElementById('selectAll');
+    selectAll.checked = selectAllTable.checked;
+    toggleSelectAll();
+}
+
+// Update selected count
+function updateSelectedCount() {
+    const checkedBoxes = document.querySelectorAll('.row-checkbox:checked');
+    const count = checkedBoxes.length;
+    
+    document.getElementById('selectedCount').textContent = `${count} selected`;
+    
+    // Show/hide bulk actions
+    const bulkActions = document.getElementById('bulkActions');
+    if (count > 0) {
+        bulkActions.style.display = 'block';
+    } else {
+        bulkActions.style.display = 'none';
+    }
+    
+    // Update select all checkboxes
+    const totalVisible = document.querySelectorAll('.row-checkbox:not([style*="display: none"])').length;
+    const selectAll = document.getElementById('selectAll');
+    const selectAllTable = document.getElementById('selectAllTable');
+    
+    if (count === 0) {
+        selectAll.indeterminate = false;
+        selectAll.checked = false;
+        selectAllTable.indeterminate = false;
+        selectAllTable.checked = false;
+    } else if (count === totalVisible) {
+        selectAll.indeterminate = false;
+        selectAll.checked = true;
+        selectAllTable.indeterminate = false;
+        selectAllTable.checked = true;
+    } else {
+        selectAll.indeterminate = true;
+        selectAllTable.indeterminate = true;
+    }
+}
+
+// Bulk enable accounts
+function bulkEnableAccounts() {
+    const selectedIds = Array.from(document.querySelectorAll('.row-checkbox:checked')).map(cb => cb.value);
+    
+    if (selectedIds.length === 0) {
+        alert('Please select accounts to enable.');
+        return;
+    }
+    
+    if (confirm(`Enable ${selectedIds.length} selected account(s)?`)) {
+        // Create form and submit
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '{{ url_for("bulk_enable_accounts") }}';
+        
+        selectedIds.forEach(id => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'account_ids';
+            input.value = id;
+            form.appendChild(input);
+        });
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+// Bulk disable accounts
+function bulkDisableAccounts() {
+    const selectedIds = Array.from(document.querySelectorAll('.row-checkbox:checked')).map(cb => cb.value);
+    
+    if (selectedIds.length === 0) {
+        alert('Please select accounts to disable.');
+        return;
+    }
+    
+    if (confirm(`Disable ${selectedIds.length} selected account(s)?`)) {
+        // Create form and submit
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '{{ url_for("bulk_disable_accounts") }}';
+        
+        selectedIds.forEach(id => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'account_ids';
+            input.value = id;
+            form.appendChild(input);
+        });
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+// Export selected credentials
+function exportSelectedCredentials() {
+    const selectedIds = Array.from(document.querySelectorAll('.row-checkbox:checked')).map(cb => cb.value);
+    
+    if (selectedIds.length === 0) {
+        alert('Please select accounts to export.');
+        return;
+    }
+    
+    // Create form and submit for download
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '{{ url_for("export_player_credentials") }}';
+    
+    // Add CSRF token
+    const csrfToken = document.querySelector('meta[name=csrf-token]');
+    if (csrfToken) {
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrf_token';
+        csrfInput.value = csrfToken.getAttribute('content');
+        form.appendChild(csrfInput);
+    }
+    
+    selectedIds.forEach(id => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'account_ids';
+        input.value = id;
+        form.appendChild(input);
+    });
+    
+    document.body.appendChild(form);
+    form.submit();
+}
+
+// Export all credentials
+function exportAllCredentials() {
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '{{ url_for("export_all_player_credentials") }}';
+    
+    // Add CSRF token
+    const csrfToken = document.querySelector('meta[name=csrf-token]');
+    if (csrfToken) {
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrf_token';
+        csrfInput.value = csrfToken.getAttribute('content');
+        form.appendChild(csrfInput);
+    }
+    
+    document.body.appendChild(form);
+    form.submit();
+}
+
+// Export active credentials only
+function exportActiveCredentials() {
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '{{ url_for("export_active_player_credentials") }}';
+    
+    // Add CSRF token
+    const csrfToken = document.querySelector('meta[name=csrf-token]');
+    if (csrfToken) {
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrf_token';
+        csrfInput.value = csrfToken.getAttribute('content');
+        form.appendChild(csrfInput);
+    }
+    
+    document.body.appendChild(form);
+    form.submit();
+}
+
+// Modal functions for Add Player Account
+function updatePlayerInfo() {
+    const select = document.getElementById('player_select');
+    const selectedOption = select.options[select.selectedIndex];
+    const preview = document.getElementById('playerPreview');
+    const usernameField = document.getElementById('modal_username');
+    const emailField = document.getElementById('modal_email');
+    
+    if (selectedOption.value) {
+        const playerName = selectedOption.dataset.name;
+        const jersey = selectedOption.dataset.jersey;
+        const position = selectedOption.dataset.position;
+        const email = selectedOption.dataset.email;
+        const photo = selectedOption.dataset.photo;
+        
+        // Update preview
+        const nameParts = playerName.split(' ');
+        const firstName = nameParts[0].toLowerCase();
+        const lastName = nameParts[nameParts.length - 1].toLowerCase();
+        
+        preview.innerHTML = `
+            <div>
+                ${photo ? `<img src="/static/${photo}" alt="${playerName}" class="rounded-circle mb-2" style="width: 60px; height: 60px; object-fit: cover;">` : '<div class="bg-light rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;"><i class="fas fa-user fa-2x text-muted"></i></div>'}
+                <h6 class="mb-1">${playerName}</h6>
+                <div class="d-flex justify-content-center gap-2">
+                    <span class="badge bg-primary">#${jersey}</span>
+                    <span class="badge bg-info">${position}</span>
+                </div>
+            </div>
+        `;
+        
+        // Auto-fill username and email
+        const suggestedUsername = `${firstName}.${lastName}`;
+        usernameField.value = suggestedUsername;
+        emailField.value = email || `${suggestedUsername}@{{ team_settings.contact_email.split('@')[1] if team_settings and team_settings.contact_email else 'zambiafc.com' }}`;
+        
+        // Update password suggestions
+        const suggestion1 = `${firstName}${jersey}`;
+        const suggestion2 = `${firstName}${lastName.substring(0, 2)}${jersey}`;
+        
+        document.getElementById('suggestion1').textContent = suggestion1;
+        document.getElementById('suggestion1').onclick = () => setModalPassword(suggestion1);
+        document.getElementById('suggestion2').textContent = suggestion2;
+        document.getElementById('suggestion2').onclick = () => setModalPassword(suggestion2);
+        
+    } else {
+        preview.innerHTML = '<span class="text-muted">Select a player to see preview</span>';
+        usernameField.value = '';
+        emailField.value = '';
+        document.getElementById('suggestion1').textContent = 'Select player first';
+        document.getElementById('suggestion2').textContent = 'Select player first';
+    }
+}
+
+function toggleModalPassword() {
+    const passwordField = document.getElementById('modal_password');
+    const icon = event.target.closest('button').querySelector('i');
+    
+    if (passwordField.type === 'password') {
+        passwordField.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        passwordField.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    }
+}
+
+function setModalPassword(password) {
+    document.getElementById('modal_password').value = password;
+}
+
+function generateModalRandomPassword() {
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    let password = '';
+    for (let i = 0; i < 8; i++) {
+        password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    document.getElementById('modal_password').value = password;
+}
+
+// Reset modal when it's closed
+document.getElementById('addPlayerAccountModal').addEventListener('hidden.bs.modal', function () {
+    document.getElementById('addPlayerAccountForm').reset();
+    document.getElementById('playerPreview').innerHTML = '<span class="text-muted">Select a player to see preview</span>';
+    document.getElementById('suggestion1').textContent = 'Select player first';
+    document.getElementById('suggestion2').textContent = 'Select player first';
+});
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Set up search input event
+    document.getElementById('search').addEventListener('keyup', filterAccounts);
+    
+    // Initialize selected count
+    updateSelectedCount();
+    
+    // Add tooltips to action buttons
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+{% endblock %}

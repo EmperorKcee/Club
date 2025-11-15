@@ -1,0 +1,144 @@
+{% extends "fans/base.html" %}
+
+{% block fan_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">Upcoming Fan Events</h2>
+    {% if current_user.role == 'admin' %}
+    <a href="#" class="btn btn-primary">Add New Event</a>
+    {% endif %}
+</div>
+
+{% if events %}
+    <div class="row row-cols-1 row-cols-md-2 g-4">
+        {% for event in events %}
+        <div class="col">
+            <div class="card h-100">
+                <div class="card-header {% if event.is_match %}bg-success{% else %}bg-primary{% endif %} text-white d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        {% if event.is_match %}
+                            <i class="fas fa-futbol me-2"></i>
+                        {% else %}
+                            <i class="fas fa-calendar-alt me-2"></i>
+                        {% endif %}
+                        {{ event.title }}
+                    </h5>
+                    {% if event.is_match %}
+                        <span class="badge bg-light text-dark">Match</span>
+                    {% else %}
+                        <span class="badge bg-light text-dark">Event</span>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-light p-3 rounded me-3 text-center" style="width: 80px;">
+                            <div class="h5 mb-0 fw-bold text-primary">
+                                {{ event.date.split('-')[2] }}
+                            </div>
+                            <div class="text-uppercase text-muted small">
+                                {{ event.date|datetimeformat('%b') }}
+                            </div>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1">
+                                {% if event.is_match %}
+                                    {{ team_settings.team_name }} vs {{ event.opponent }}
+                                {% else %}
+                                    {{ event.title }}
+                                {% endif %}
+                            </h6>
+                            <p class="text-muted mb-1">
+                                <i class="far fa-clock me-1"></i> {{ event.time }}
+                            </p>
+                            <p class="text-muted mb-0">
+                                <i class="fas fa-map-marker-alt me-1"></i> {{ event.location }}
+                            </p>
+                        </div>
+                    </div>
+                    {% if event.is_match %}
+                        <div class="alert alert-info py-2 mb-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span><i class="fas fa-ticket-alt me-1"></i> Tickets Available</span>
+                                <a href="{{ url_for('fans.purchase_tickets', match_id=event.match_id) }}" class="btn btn-sm btn-outline-primary">
+                                    Buy Tickets
+                                </a>
+                            </div>
+                        </div>
+                    {% endif %}
+                    <p class="card-text">{{ event.description|truncate(150) }}</p>
+                </div>
+                <div class="card-footer bg-transparent d-flex justify-content-between">
+                    {% if event.is_match %}
+                        <a href="#" class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-info-circle me-1"></i> Match Details
+                        </a>
+                        <a href="{{ url_for('fans.purchase_tickets', match_id=event.match_id) }}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-ticket-alt me-1"></i> Get Tickets
+                        </a>
+                    {% else %}
+                        <a href="#" class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-info-circle me-1"></i> More Info
+                        </a>
+                        <a href="#" class="btn btn-primary btn-sm">
+                            <i class="fas fa-calendar-plus me-1"></i> Add to Calendar
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="text-center py-5">
+        <div class="mb-3">
+            <i class="far fa-calendar-alt fa-4x text-muted"></i>
+        </div>
+        <h4>No Upcoming Events</h4>
+        <p class="text-muted">Check back later for upcoming fan events and activities.</p>
+        {% if current_user.is_authenticated and current_user.role == 'admin' %}
+            <a href="#" class="btn btn-primary">Add New Event</a>
+        {% endif %}
+    </div>
+{% endif %}
+
+{% if past_events %}
+<div class="mt-5">
+    <h4 class="mb-4">Past Events</h4>
+    <div class="list-group">
+        {% for event in past_events %}
+        <div class="list-group-item">
+            <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1">{{ event.title }}</h5>
+                <small class="text-muted">{{ event.date }}</small>
+            </div>
+            <p class="mb-1">{{ event.description }}</p>
+            <small class="text-muted">Event ended</small>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    // Add any custom JavaScript for the events page here
+    document.addEventListener('DOMContentLoaded', function() {
+        // Example: Add smooth scrolling to event registration
+        const registerButtons = document.querySelectorAll('.btn-register');
+        const isAuthenticated = {{ 'true' if current_user.is_authenticated and current_user.role == 'fan' else 'false' }};
+        const loginUrl = "{{ url_for('auth.login') }}";
+        
+        registerButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                if (!isAuthenticated) {
+                    e.preventDefault();
+                    // Show login/register modal or redirect
+                    window.location.href = loginUrl;
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

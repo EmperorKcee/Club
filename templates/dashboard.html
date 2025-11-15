@@ -1,0 +1,327 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Football Club Management{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stat-card {
+        border-left: 4px solid #0d6efd;
+        transition: transform 0.2s;
+    }
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .upcoming-match {
+        border-left: 4px solid #198754;
+    }
+    .recent-transaction {
+        border-left: 4px solid #32018e;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Dashboard</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        
+        
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <!-- Total Players Card -->
+    <div class="col-md-3 mb-3">
+        <div class="card h-100 stat-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">Total Players</h6>
+                        <h3 class="mb-0">{{ total_players }}</h3>
+                    </div>
+                    <div class="bg-primary bg-opacity-10 p-3 rounded">
+                        <i class="fas fa-users text-primary"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <span class="text-muted">{{ active_players }} active</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Upcoming Matches Card -->
+    <div class="col-md-3 mb-3">
+        <div class="card h-100 stat-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">Upcoming Matches</h6>
+                        <h3 class="mb-0">{{ upcoming_matches|length }}</h3>
+                    </div>
+                    <div class="bg-success bg-opacity-10 p-3 rounded">
+                        <i class="fas fa-futbol text-success"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    {% if upcoming_matches %}
+                        <span class="text-primary">
+                            Next: {{ upcoming_matches[0].match_date.strftime('%b %d') }}
+                        </span>
+                    {% else %}
+                        <span class="text-muted">No upcoming matches</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Total Goals Card -->
+    <div class="col-md-3 mb-3">
+        <div class="card h-100 stat-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">Total Goals</h6>
+                        <h3 class="mb-0">{{ total_goals }}</h3>
+                    </div>
+                    <div class="bg-warning bg-opacity-10 p-3 rounded">
+                        <i class="fas fa-futbol text-warning"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    {% if top_scorers and top_scorers[0].player %}
+                        <span class="text-muted">Top: {{ top_scorers[0].player.full_name }} ({{ top_scorers[0].goals }})</span>
+                    {% elif top_scorers %}
+                        <span class="text-muted">Top: {{ top_scorers[0].player_id }} ({{ top_scorers[0].goals }})</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Training Sessions Card -->
+    <div class="col-md-3 mb-3">
+        <div class="card h-100 stat-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">Training Sessions</h6>
+                        <h3 class="mb-0">{{ upcoming_trainings|length if upcoming_trainings else 0 }}</h3>
+                    </div>
+                    <div class="bg-info bg-opacity-10 p-3 rounded">
+                        <i class="fas fa-dumbbell text-info"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    {% if upcoming_trainings %}
+                        <span class="text-primary">
+                            Next: {{ upcoming_trainings[0].session_date.strftime('%b %d') }}
+                        </span>
+                    {% else %}
+                        <span class="text-muted">No upcoming sessions</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="row">
+    <!-- Left Column -->
+    <div class="col-md-8">
+        <!-- Top Scorers -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Top Scorers</h5>
+                <a href="{{ url_for('players') }}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="list-group list-group-flush">
+                {% if top_scorers %}
+                    {% for player in top_scorers %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <img src="{{ url_for('static', filename=player.photo_url) if player.photo_url else url_for('static', filename='img/default-player.png') }}" 
+                                 class="rounded-circle me-3" width="40" height="40" 
+                                 alt="{{ player.full_name }}"
+                                 onerror="this.onerror=null; this.src='{{ url_for('static', filename='img/default-player.png') }}'">
+                            <div>
+                                <h6 class="mb-0">{{ player.full_name }}</h6>
+                                <small class="text-muted">#{{ player.jersey_number }} | {{ player.position }}</small>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            {% if player.stats %}
+                                <span class="badge bg-success rounded-pill">{{ player.stats.assists or 0 }} assists</span>
+                            {% else %}
+                                <span class="badge bg-secondary rounded-pill">No stats</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="list-group-item text-center text-muted py-4">
+                        No player statistics available yet.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Recent Matches -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Recent Matches</h5>
+                <a href="{{ url_for('matches') }}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="list-group list-group-flush">
+                {% if upcoming_matches %}
+                    {% for match in upcoming_matches %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <!-- Home Team -->
+                            <div class="text-center" style="width: 45%;">
+                                {% if team_settings and team_settings.logo_url %}
+                                    <img src="{{ url_for('static', filename=team_settings.logo_url) }}" 
+                                         alt="{{ team_settings.team_name if team_settings else 'Home Team' }}" 
+                                         class="img-fluid"
+                                         style="max-height: 40px; max-width: 40px; margin-bottom: 5px;"
+                                         onerror="this.onerror=null; this.src='{{ url_for('static', filename='img/default-team.png') }}'">
+                                {% else %}
+                                    <div class="text-muted small mb-1">No Logo</div>
+                                {% endif %}
+                                <div class="fw-bold">{{ team_settings.team_name if team_settings else 'Home Team' }}</div>
+                            </div>
+                            
+                            <div class="text-muted small fw-bold" style="width: 10%;">vs</div>
+                            
+                            <!-- Away Team (Opponent) -->
+                            <div class="text-center" style="width: 45%;">
+                                {% if match.opponent_logo %}
+                                    <img src="{{ url_for('static', filename=match.opponent_logo) }}" 
+                                         alt="{{ match.opponent }}" 
+                                         class="img-fluid"
+                                         style="max-height: 40px; max-width: 40px; margin-bottom: 5px;"
+                                         onerror="this.onerror=null; this.src='{{ url_for('static', filename='img/default-team.png') }}'">
+                                {% else %}
+                                    <div class="text-muted small mb-1">No Logo</div>
+                                {% endif %}
+                                <div class="fw-bold">{{ match.opponent }}</div>
+                            </div>
+                        </div>
+                        <div class="text-center mt-2">
+                            <small class="text-muted">
+                                {{ match.match_date.strftime('%b %d, %Y, %H:%M') }}
+                            </small>
+                            {% if match.competition %}
+                                <span class="badge bg-primary ms-2">{{ match.competition }}</span>
+                            {% endif %}
+                        </div>
+                        {% if match.venue %}
+                            <div class="text-center mt-1">
+                                <small class="text-muted">
+                                    <i class="fas fa-map-marker-alt"></i> {{ match.venue }}
+                                </small>
+                            </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="list-group-item text-center text-muted py-4">
+                        No upcoming matches scheduled.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Right Column -->
+    <div class="col-md-4">
+        <!-- Upcoming Matches -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Upcoming Matches</h5>
+                <a href="{{ url_for('matches') }}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="list-group list-group-flush">
+                {% if upcoming_matches %}
+                    {% for match in upcoming_matches %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">
+                                {% if match.venue == 'home' %}
+                                    {{ team_settings.team_name }} vs {{ match.opponent }}
+                                {% else %}
+                                    {{ match.opponent }} vs {{ team_settings.team_name }}
+                                {% endif %}
+                            </h6>
+                            <small class="text-muted">
+                                {% if match.match_date.date() == now.date() %}
+                                    Today
+                                {% elif match.match_date.date() == (now + timedelta(days=1)).date() %}
+                                    Tomorrow
+                                {% else %}
+                                    {{ match.match_date.strftime('%b %d') }}
+                                {% endif %}
+                            </small>
+                        </div>
+                        <p class="mb-1">
+                            {{ match.competition or 'Friendly' }} - {{ match.venue|title }}
+                        </p>
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-calendar-alt me-2 text-muted"></i>
+                            <small class="text-muted">
+                                {{ match.match_date.strftime('%a, %b %d, %Y') }}
+                            </small>
+                        </div>
+                        <div class="d-flex align-items-center mt-1">
+                            <i class="fas fa-clock me-2 text-muted"></i>
+                            <small class="text-muted">
+                                {{ match.match_date.strftime('%H:%M') }}
+                            </small>
+                            {% if match.venue == 'home' %}
+                                <span class="ms-auto">
+                                    <i class="fas fa-home text-primary me-1"></i>
+                                    <small class="text-muted">Home Game</small>
+                                </span>
+                            {% else %}
+                                <span class="ms-auto">
+                                    <i class="fas fa-route text-warning me-1"></i>
+                                    <small class="text-muted">Away Game</small>
+                                </span>
+                            {% endif %}
+                        </div>
+                        {% if match.match_report %}
+                        <div class="mt-2">
+                            <a href="{{ url_for('view_match', match_id=match.id) }}" class="btn btn-sm btn-outline-primary w-100">
+                                <i class="far fa-newspaper me-1"></i> Match Preview
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="list-group-item text-center text-muted py-4">
+                        <i class="far fa-calendar-alt fa-2x mb-2"></i>
+                        <p class="mb-0">No upcoming matches scheduled</p>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="card-footer text-center">
+                <a href="{{ url_for('add_match') }}" class="btn btn-sm btn-outline-primary me-2">
+                    <i class="fas fa-plus me-1"></i> Add Match
+                </a>
+                <a href="{{ url_for('matches') }}" class="btn btn-sm btn-primary">
+                    <i class="fas fa-list me-1"></i> Full Schedule
+                </a>
+            </div>
+        </div>
+        
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% endblock %}

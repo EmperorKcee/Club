@@ -1,0 +1,8 @@
+{% extends "_transaction_form.html" %}
+
+{% block title %}Edit Transaction - Football Club Management{% endblock %}
+
+{% block content %}
+    {% set now = datetime.utcnow() %}
+    {{ super() }}
+{% endblock %}

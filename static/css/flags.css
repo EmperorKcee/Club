@@ -1,0 +1,50 @@
+/* Flags styling */
+.flag {
+    display: inline-block;
+    width: 20px;
+    height: 15px;
+    background-size: cover;
+    border-radius: 2px;
+    margin-right: 5px;
+    vertical-align: middle;
+    box-shadow: 0 0 1px rgba(0,0,0,0.3);
+}
+
+/* Common country flags */
+.flag.zm { background-image: url('/static/img/flags/zm.png'); }
+.flag.gb { background-image: url('/static/img/flags/gb.png'); }
+.flag.br { background-image: url('/static/img/flags/br.png'); }
+.flag.fr { background-image: url('/static/img/flags/fr.png'); }
+.flag.de { background-image: url('/static/img/flags/de.png'); }
+.flag.es { background-image: url('/static/img/flags/es.png'); }
+.flag.it { background-image: url('/static/img/flags/it.png'); }
+.flag.pt { background-image: url('/static/img/flags/pt.png'); }
+.flag.ng { background-image: url('/static/img/flags/ng.png'); }
+.flag.gh { background-image: url('/static/img/flags/gh.png'); }
+.flag.za { background-image: url('/static/img/flags/za.png'); }
+.flag.ke { background-image: url('/static/img/flags/ke.png'); }
+.flag.eg { background-image: url('/static/img/flags/eg.png'); }
+.flag.ma { background-image: url('/static/img/flags/ma.png'); }
+.flag.sn { background-image: url('/static/img/flags/sn.png'); }
+.flag.ci { background-image: url('/static/img/flags/ci.png'); }
+.flag.cm { background-image: url('/static/img/flags/cm.png'); }
+.flag.zw { background-image: url('/static/img/flags/zw.png'); }
+.flag.mw { background-image: url('/static/img/flags/mw.png'); }
+.flag.mz { background-image: url('/static/img/flags/mz.png'); }
+.flag.na { background-image: url('/static/img/flags/na.png'); }
+.flag.bw { background-image: url('/static/img/flags/bw.png'); }
+.flag.tz { background-image: url('/static/img/flags/tz.png'); }
+.flag.ug { background-image: url('/static/img/flags/ug.png'); }
+.flag.rw { background-image: url('/static/img/flags/rw.png'); }
+.flag.bi { background-image: url('/static/img/flags/bi.png'); }
+.flag.cd { background-image: url('/static/img/flags/cd.png'); }
+.flag.ao { background-image: url('/static/img/flags/ao.png'); }
+.flag.nao { background-image: url('/static/img/flags/na.png'); } /* Namibia */
+.flag.sz { background-image: url('/static/img/flags/sz.png'); } /* Eswatini */
+.flag.ls { background-image: url('/static/img/flags/ls.png'); } /* Lesotho */
+.flag.mu { background-image: url('/static/img/flags/mu.png'); } /* Mauritius */
+.flag.sc { background-image: url('/static/img/flags/sc.png'); } /* Seychelles */
+.flag.mg { background-image: url('/static/img/flags/mg.png'); } /* Madagascar */
+
+/* Default flag (Zambia) */
+.flag.default { background-image: url('/static/img/flags/zm.png'); }

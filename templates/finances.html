@@ -1,0 +1,406 @@
+{% extends "base.html" %}
+
+{% block title %}Finances - Football Club Management{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stat-card {
+        border-left: 4px solid #0d6efd;
+        transition: transform 0.2s;
+        height: 100%;
+    }
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .revenue-card {
+        border-left-color: #198754;
+    }
+    .expense-card {
+        border-left-color: #dc3545;
+    }
+    .profit-card {
+        border-left-color: #ffc107;
+    }
+    .transaction-list {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    .transaction-item {
+        border-left: 3px solid #198754;
+        transition: all 0.3s;
+    }
+    .transaction-item.expense {
+        border-left-color: #dc3545;
+    }
+    .transaction-item:hover {
+        background-color: #f8f9fa;
+        transform: translateX(5px);
+    }
+    .trend-up {
+        color: #198754;
+    }
+    .trend-down {
+        color: #dc3545;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">Financial Overview</h1>
+        <div class="btn-toolbar mb-2 mb-md-0">
+ 
+            <button type="button" class="btn btn-sm btn-primary">
+                <i class="fas fa-plus"></i> Add Transaction
+            </button>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <!-- Revenue Card -->
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 stat-card revenue-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Monthly Revenue</h6>
+                            <h3 class="mb-0">{{ "ZMW {:,.2f}".format(financial_data.revenue.monthly) }}</h3>
+                        </div>
+                        <div class="bg-success bg-opacity-10 p-3 rounded">
+                            <i class="fas fa-arrow-up text-success"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <span class="{{ 'trend-up' if financial_data.revenue.trend == 'up' else 'trend-down' }}">
+                            <i class="fas fa-arrow-{{ 'up' if financial_data.revenue.trend == 'up' else 'down' }}"></i> 
+                            {{ "%.1f%%"|format(financial_data.revenue.change_percent) }}
+                        </span>
+                        <span class="text-muted">vs last month</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Expenses Card -->
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 stat-card expense-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Monthly Expenses</h6>
+                            <h3 class="mb-0">{{ "ZMW {:,.2f}".format(financial_data.expenses.monthly) }}</h3>
+                        </div>
+                        <div class="bg-danger bg-opacity-10 p-3 rounded">
+                            <i class="fas fa-arrow-down text-danger"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <span class="{{ 'trend-up' if financial_data.expenses.trend == 'down' else 'trend-down' }}">
+                            <i class="fas fa-arrow-{{ 'down' if financial_data.expenses.trend == 'down' else 'up' }}"></i> 
+                            {{ "%.1f%%"|format(financial_data.expenses.change_percent) }}
+                        </span>
+                        <span class="text-muted">vs last month</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profit Card -->
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 stat-card profit-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Monthly Profit</h6>
+                            <h3 class="mb-0">{{ "ZMW {:,.2f}".format(financial_data.profit.monthly) }}</h3>
+                        </div>
+                        <div class="bg-warning bg-opacity-10 p-3 rounded">
+                            <i class="fas fa-chart-line text-warning"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <span class="{{ 'trend-up' if financial_data.profit.trend == 'up' else 'trend-down' }}">
+                            <i class="fas fa-arrow-{{ 'up' if financial_data.profit.trend == 'up' else 'down' }}"></i> 
+                            {{ "%.1f%%"|format(financial_data.profit.change_percent) }}
+                        </span>
+                        <span class="text-muted">vs last month</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% include '_transactions_section.html' %}
+
+    <!-- Charts Section -->
+    <div class="row g-3">
+        <div class="col-12 col-lg-8">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Revenue vs Expenses (Last 6 Months)</h5>
+                    <div class="btn-group btn-group-sm" role="group">
+                        <button type="button" class="btn btn-outline-secondary active">6M</button>
+                        <button type="button" class="btn btn-outline-secondary">1Y</button>
+                        <button type="button" class="btn btn-outline-secondary">ALL</button>
+                    </div>
+                </div>
+                <div class="card-body position-relative" style="min-height: 350px;">
+                    <canvas id="revenueExpenseChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-lg-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">Expense Distribution</h5>
+                </div>
+                <div class="card-body d-flex flex-column" style="min-height: 350px;">
+                    <div class="chart-container" style="position: relative; height: 250px; width: 100%;">
+                        <canvas id="expenseDistributionChart"></canvas>
+                    </div>
+                    <div class="mt-auto pt-3">
+                        <div class="d-flex justify-content-between small text-muted">
+                            <span>Total Expenses</span>
+                            <strong>ZMW {{ "{:,.2f}".format(financial_data.expenses.monthly) }}</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Delete transaction confirmation
+document.addEventListener('DOMContentLoaded', function() {
+    const deleteButtons = document.querySelectorAll('.delete-transaction');
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteTransactionModal'));
+    const deleteForm = document.getElementById('deleteTransactionForm');
+    const transactionDescription = document.getElementById('transactionDescription');
+    
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const transactionId = this.getAttribute('data-id');
+            const description = this.getAttribute('data-description');
+            
+            // Update modal content
+            transactionDescription.textContent = description;
+            deleteForm.action = `/transaction/${transactionId}/delete`;
+            
+            // Show the modal
+            deleteModal.show();
+        });
+    });
+    
+    // Initialize tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+<script>
+// Delete transaction confirmation
+document.addEventListener('DOMContentLoaded', function() {
+    const deleteButtons = document.querySelectorAll('.delete-transaction');
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteTransactionModal'));
+    const deleteForm = document.getElementById('deleteTransactionForm');
+    const transactionDescription = document.getElementById('transactionDescription');
+    
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const transactionId = this.getAttribute('data-id');
+            const description = this.getAttribute('data-description');
+            
+            // Update modal content
+            transactionDescription.textContent = description;
+            deleteForm.action = `/transaction/${transactionId}/delete`;
+            
+            // Show the modal
+            deleteModal.show();
+        });
+    });
+    
+    // Initialize tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Revenue vs Expenses Chart
+    const revenueExpenseCtx = document.getElementById('revenueExpenseChart').getContext('2d');
+    const revenueExpenseChart = new Chart(revenueExpenseCtx, {
+        type: 'bar',
+        data: {
+            labels: ['May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'],
+            datasets: [
+                {
+                    label: 'Revenue',
+                    data: [24000, 25000, 26000, 27000, 28000, 30000],
+                    backgroundColor: 'rgba(40, 167, 69, 0.8)',
+                    borderColor: 'rgba(40, 167, 69, 1)',
+                    borderWidth: 0,
+                    borderRadius: 4,
+                    barPercentage: 0.7,
+                    categoryPercentage: 0.8
+                },
+                {
+                    label: 'Expenses',
+                    data: [19000, 18500, 19000, 19500, 20000, 20500],
+                    backgroundColor: 'rgba(220, 53, 69, 0.8)',
+                    borderColor: 'rgba(220, 53, 69, 1)',
+                    borderWidth: 0,
+                    borderRadius: 4,
+                    barPercentage: 0.7,
+                    categoryPercentage: 0.8
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            layout: {
+                padding: {
+                    top: 10,
+                    right: 15,
+                    bottom: 10,
+                    left: 10
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        display: true,
+                        drawBorder: false,
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            if (value >= 1000) {
+                                return 'ZMW ' + (value / 1000) + 'k';
+                            }
+                            return 'ZMW ' + value;
+                        },
+                        padding: 8
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false,
+                        drawBorder: false
+                    },
+                    ticks: {
+                        padding: 8
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                    align: 'end',
+                    labels: {
+                        usePointStyle: true,
+                        padding: 16
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.85)',
+                    padding: 12,
+                    titleFont: {
+                        size: 14,
+                        weight: 'bold'
+                    },
+                    bodyFont: {
+                        size: 14
+                    },
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': ZMW ' + context.raw.toLocaleString();
+                        }
+                    },
+                    displayColors: false,
+                    borderColor: 'rgba(0, 0, 0, 0.1)',
+                    borderWidth: 1
+                }
+            }
+        }
+    });
+
+    // Expense Distribution Chart
+    const expenseDistCtx = document.getElementById('expenseDistributionChart').getContext('2d');
+    const expenseDistChart = new Chart(expenseDistCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Player Salaries', 'Staff Salaries', 'Facility', 'Travel', 'Equipment', 'Other'],
+            datasets: [{
+                data: [45, 20, 15, 10, 5, 5],
+                backgroundColor: [
+                    '#dc3545',
+                    '#fd7e14',
+                    '#ffc107',
+                    '#20c997',
+                    '#0dcaf0',
+                    '#6c757d'
+                ],
+                borderWidth: 0,
+                spacing: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '70%',
+            radius: '90%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 16,
+                        usePointStyle: true,
+                        pointStyle: 'circle',
+                        boxWidth: 8,
+                        boxHeight: 8
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.85)',
+                    padding: 12,
+                    titleFont: {
+                        size: 14,
+                        weight: 'bold'
+                    },
+                    bodyFont: {
+                        size: 13
+                    },
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.raw || 0;
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const amount = (value / 100) * {{ financial_data.expenses.monthly }};
+                            return [
+                                `${label}: ${value}%`,
+                                `ZMW ${amount.toLocaleString(undefined, {maximumFractionDigits: 2})}`
+                            ];
+                        }
+                    },
+                    displayColors: false,
+                    borderColor: 'rgba(0, 0, 0, 0.1)',
+                    borderWidth: 1
+                }
+        }
+    });
+});
+</script>
+{% endblock %}

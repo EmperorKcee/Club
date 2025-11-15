@@ -1,0 +1,231 @@
+{% extends "admin/shop/base.html" %}
+
+{% block page_title %}Shop Dashboard{% endblock %}
+
+{% block page_actions %}
+    <a href="{{ url_for('shop_admin.new_product') }}" class="btn btn-primary btn-sm me-2">
+        <i class="fas fa-plus me-1"></i> Add Product
+    </a>
+    <a href="{{ url_for('shop_admin.new_category') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="fas fa-tag me-1"></i> Add Category
+    </a>
+{% endblock %}
+
+{% block shop_content %}
+<div class="row mb-4">
+    <!-- Stats Cards -->
+    <div class="col-md-3 mb-4">
+        <div class="card card-dashboard h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase text-muted mb-0">Total Products</h6>
+                        <h2 class="mb-0 mt-2">{{ stats.products_count }}</h2>
+                    </div>
+                    <div class="icon-shape bg-primary bg-opacity-10 text-primary rounded-3 p-3">
+                        <i class="fas fa-box fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-4">
+        <div class="card card-dashboard h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase text-muted mb-0">Categories</h6>
+                        <h2 class="mb-0 mt-2">{{ stats.categories_count }}</h2>
+                    </div>
+                    <div class="icon-shape bg-success bg-opacity-10 text-success rounded-3 p-3">
+                        <i class="fas fa-tags fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-4">
+        <div class="card card-dashboard h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase text-muted mb-0">Orders</h6>
+                        <h2 class="mb-0 mt-2">0</h2>
+                    </div>
+                    <div class="icon-shape bg-warning bg-opacity-10 text-warning rounded-3 p-3">
+                        <i class="fas fa-shopping-cart fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-4">
+        <div class="card card-dashboard h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase text-muted mb-0">Revenue</h6>
+                        <h2 class="mb-0 mt-2">ZMW 0.00</h2>
+                    </div>
+                    <div class="icon-shape bg-info bg-opacity-10 text-info rounded-3 p-3">
+                        <i class="fas fa-dollar-sign fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Recent Products -->
+    <div class="col-md-8 mb-4">
+        <div class="card card-dashboard h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Recent Products</h5>
+                <a href="{{ url_for('shop_admin.products') }}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body p-0">
+                {% if recent_products %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Category</th>
+                                    <th>Price</th>
+                                    <th>Status</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for product in recent_products %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% set main_image = product.images|selectattr('is_main', 'equalto', True)|first if product.images else None %}
+                                            {% if main_image %}
+                                                <img src="{{ url_for('static', filename=main_image.image_url) }}" 
+                                                     class="rounded me-2" width="40" height="40" 
+                                                     alt="{{ product.name }}">
+                                            {% else %}
+                                                <div class="bg-light rounded me-2 d-flex align-items-center justify-content-center" 
+                                                     style="width: 40px; height: 40px;">
+                                                    <i class="fas fa-box text-muted"></i>
+                                                </div>
+                                            {% endif %}
+                                            <div>
+                                                <h6 class="mb-0">{{ product.name }}</h6>
+                                                <small class="text-muted">SKU: {{ product.sku or 'N/A' }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ product.category.name if product.category else 'Uncategorized' }}</td>
+                                    <td>
+                                        {% if product.sale_price %}
+                                            <span class="text-danger">ZMW {{ "%.2f"|format(product.sale_price) }}</span>
+                                            <small class="text-muted text-decoration-line-through d-block">ZMW {{ "%.2f"|format(product.price) }}</small>
+                                        {% else %}
+                                            ZMW {{ "%.2f"|format(product.price) }}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if product.is_active %}
+                                            <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Inactive</span>
+                                        {% endif %}
+                                        {% if product.is_featured %}
+                                            <span class="badge bg-primary ms-1">Featured</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">
+                                        <a href="{{ url_for('shop_admin.edit_product', product_id=product.id) }}" 
+                                           class="btn btn-sm btn-outline-primary"
+                                           data-bs-toggle="tooltip" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center p-5">
+                        <div class="mb-3">
+                            <i class="fas fa-box-open fa-3x text-muted"></i>
+                        </div>
+                        <h5>No products found</h5>
+                        <p class="text-muted">Get started by adding your first product</p>
+                        <a href="{{ url_for('shop_admin.new_product') }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-1"></i> Add Product
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="col-md-4 mb-4">
+        <div class="card card-dashboard h-100">
+            <div class="card-header">
+                <h5 class="mb-0">Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('shop_admin.new_product') }}" class="btn btn-primary mb-2">
+                        <i class="fas fa-plus me-2"></i> Add New Product
+                    </a>
+                    <a href="{{ url_for('shop_admin.new_category') }}" class="btn btn-outline-secondary mb-2">
+                        <i class="fas fa-tag me-2"></i> Add New Category
+                    </a>
+                    <a href="#" class="btn btn-outline-secondary mb-2">
+                        <i class="fas fa-upload me-2"></i> Import Products
+                    </a>
+                    <a href="#" class="btn btn-outline-secondary">
+                        <i class="fas fa-download me-2"></i> Export Products
+                    </a>
+                </div>
+                
+                <hr class="my-4">
+                
+                <h6 class="mb-3">Recent Activity</h6>
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item border-0 px-0">
+                        <div class="d-flex">
+                            <div class="flex-shrink-0">
+                                <div class="avatar-xs">
+                                    <span class="avatar-title bg-primary bg-opacity-10 text-primary rounded-circle">
+                                        <i class="fas fa-box"></i>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-2">
+                                <p class="mb-0">No recent activity</p>
+                                <small class="text-muted">Just now</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    // Initialize tooltips
+    document.addEventListener('DOMContentLoaded', function() {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block title %}{% if staff %}Edit{% else %}Add{% endif %} Staff Member - Football Club{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3">
+        <h1 class="h2">{% if staff %}Edit{% else %}Add New{% endif %} Staff Member</h1>
+        <div class="btn-toolbar mb-2 mb-md-0">
+            <a href="{{ url_for('staff.staff_list') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Back to Staff
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('staff.add_staff') if not staff else url_for('staff.edit_staff', staff_id=staff.id) }}" enctype="multipart/form-data">
+                {{ form.hidden_tag() }}  <!-- CSRF Token -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="text-center mb-3">
+                            {% if staff and staff.photo_url %}
+                                <img src="{{ url_for('static', filename=staff.photo_url) }}" 
+                                     class="img-thumbnail rounded-circle" 
+                                     alt="{{ staff.first_name }} {{ staff.last_name }}" 
+                                     style="width: 150px; height: 150px; object-fit: cover;">
+                            {% else %}
+                                <div class="d-flex align-items-center justify-content-center bg-light rounded-circle" 
+                                     style="width: 150px; height: 150px; margin: 0 auto;">
+                                    <i class="fas fa-user-tie fa-4x text-muted"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.photo.label(class="form-label") }}
+                            {{ form.photo(class="form-control") }}
+                            {% if staff and staff.photo_url %}
+                                <div class="form-check mt-2">
+                                    {{ form.remove_photo(class="form-check-input") }}
+                                    {{ form.remove_photo.label(class="form-check-label") }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-9">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.first_name.label(class="form-label") }} <span class="text-danger">*</span>
+                                    {{ form.first_name(class="form-control") }}
+                                    {% if form.first_name.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.first_name.errors[0] }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.last_name.label(class="form-label") }} <span class="text-danger">*</span>
+                                    {{ form.last_name(class="form-control") }}
+                                    {% if form.last_name.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.last_name.errors[0] }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            {{ form.role.label(class="form-label") }} <span class="text-danger">*</span>
+                            {{ form.role(class="form-select") }}
+                            {% if form.role.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.role.errors[0] }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            {{ form.hire_date.label(class="form-label") }}
+                            {{ form.hire_date(class="form-control") }}
+                            {% if form.hire_date.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.hire_date.errors[0] }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            {{ form.email.label(class="form-label") }}
+                            {{ form.email(class="form-control") }}
+                            {% if form.email.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.email.errors[0] }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            {{ form.phone.label(class="form-label") }}
+                            {{ form.phone(class="form-control") }}
+                            {% if form.phone.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.phone.errors[0] }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            {{ form.salary.label(class="form-label") }}
+                            <div class="input-group">
+                                <span class="input-group-text">ZMW</span>
+                                {{ form.salary(class="form-control") }}
+                            </div>
+                            {% if form.salary.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.salary.errors[0] }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Status</label>
+                            <div class="form-check form-switch">
+                                {{ form.is_active(class="form-check-input") }}
+                                {{ form.is_active.label(class="form-check-label") }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    {{ form.bio.label(class="form-label") }}
+                    {{ form.bio(class="form-control", rows=3) }}
+                    {% if form.bio.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.bio.errors[0] }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <a href="{{ url_for('staff.staff_list') }}" class="btn btn-outline-secondary me-md-2">Cancel</a>
+                    <button type="submit" class="btn btn-primary">
+                        {% if staff %}Update{% else %}Add{% endif %} Staff Member
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,313 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Player Account - Admin{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <div>
+        <h1 class="h2">Edit Player Account</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('players') }}">Players</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('admin_player_accounts') }}">Player Accounts</a></li>
+                <li class="breadcrumb-item active">Edit Account</li>
+            </ol>
+        </nav>
+    </div>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{{ url_for('admin_player_accounts') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Back to Accounts
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Edit Account for {{ player_user.player.full_name }}</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" id="editAccountForm" action="{{ url_for('edit_player_account', player_user_id=player_user.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            {{ form.username.label(class="form-label") }} <span class="text-danger">*</span>
+                            {{ form.username(class="form-control" + (" is-invalid" if form.username.errors else ""), value=player_user.username) }}
+                            {% for error in form.username.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                            <div class="form-text">Used to login to the player portal</div>
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.email.label(class="form-label") }}
+                            {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else ""), value=player_user.email or '') }}
+                            {% for error in form.email.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                            <div class="form-text">Player's email address</div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            {{ form.new_password.label(class="form-label") }}
+                            <div class="input-group">
+                                {{ form.new_password(class="form-control" + (" is-invalid" if form.new_password.errors else ""), 
+                                    placeholder="Leave blank to keep current password") }}
+                                <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                {% for error in form.new_password.errors %}
+                                    <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            <div class="form-text">Only enter if you want to change the password</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Password Suggestions</label>
+                            <div class="d-flex gap-2 flex-wrap">
+                                <button type="button" class="btn btn-sm btn-outline-primary" 
+                                        onclick="setPassword('{{ player_user.player.first_name.lower() }}{{ player_user.player.jersey_number }}')">
+                                    {{ player_user.player.first_name.lower() }}{{ player_user.player.jersey_number }}
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="generateRandomPassword()">
+                                    Generate Random
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check">
+                            {{ form.is_active(class="form-check-input" + (" is-invalid" if form.is_active.errors else ""), checked=player_user.is_active) }}
+                            {{ form.is_active.label(class="form-check-label") }}
+                            {% for error in form.is_active.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                            <div class="form-text">Uncheck to disable login access without deleting the account</div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Note:</strong> If you change the password, make sure to inform the player of their new credentials.
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('admin_player_accounts') }}" class="btn btn-secondary">
+                            <i class="fas fa-times me-1"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i> Update Account
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Player Information -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Player Information</h5>
+            </div>
+            <div class="card-body text-center">
+                {% if player_user.player.photo_url %}
+                <img src="{{ url_for('static', filename=player_user.player.photo_url) }}" alt="{{ player_user.player.full_name }}" 
+                     class="rounded-circle mb-3" style="width: 100px; height: 100px; object-fit: cover;">
+                {% else %}
+                <div class="bg-light rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" 
+                     style="width: 100px; height: 100px;">
+                    <i class="fas fa-user fa-3x text-muted"></i>
+                </div>
+                {% endif %}
+                
+                <h5>{{ player_user.player.full_name }}</h5>
+                <div class="d-flex justify-content-center gap-2 mb-3">
+                    <span class="badge bg-primary">#{{ player_user.player.jersey_number }}</span>
+                    <span class="badge bg-info">{{ player_user.player.position }}</span>
+                </div>
+                
+                <div class="text-muted small">
+                    <div class="mb-1">
+                        <i class="fas fa-calendar me-1"></i>
+                        Age: {{ player_user.player.age }} years
+                    </div>
+                    <div class="mb-1">
+                        <i class="fas fa-flag me-1"></i>
+                        {{ player_user.player.nationality or 'Zambia' }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Account Status -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="mb-0">Account Status</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label text-muted">Status</label>
+                    <div>
+                        {% if player_user.is_active %}
+                        <span class="badge bg-success">Active</span>
+                        {% else %}
+                        <span class="badge bg-warning text-dark">Disabled</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label text-muted">Created</label>
+                    <div>{{ player_user.created_at.strftime('%B %d, %Y') if player_user.created_at else 'N/A' }}</div>
+                </div>
+                
+                <div class="mb-0">
+                    <label class="form-label text-muted">Last Login</label>
+                    <div>
+                        {% if player_user.last_login %}
+                        {{ player_user.last_login.strftime('%B %d, %Y at %H:%M') }}
+                        {% else %}
+                        <span class="text-muted">Never logged in</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="mb-0">Quick Actions</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-outline-warning btn-sm" 
+                            data-bs-toggle="modal" data-bs-target="#resetPasswordModal">
+                        <i class="fas fa-key me-1"></i> Reset Password
+                    </button>
+                    <button type="button" class="btn btn-outline-danger btn-sm" 
+                            data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
+                        <i class="fas fa-trash me-1"></i> Delete Account
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reset Password Modal -->
+<div class="modal fade" id="resetPasswordModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Reset Password</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to reset the password for <strong>{{ player_user.player.full_name }}</strong>?</p>
+                <p class="text-muted">A new password will be generated automatically and displayed after reset.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form action="{{ url_for('reset_player_password', player_user_id=player_user.id) }}" method="POST" class="d-inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-warning">Reset Password</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Account Modal -->
+<div class="modal fade" id="deleteAccountModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete Account</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the player account for <strong>{{ player_user.player.full_name }}</strong>?</p>
+                <p class="text-danger"><i class="fas fa-exclamation-triangle me-1"></i>This action cannot be undone. The player will lose access to the player portal.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form action="{{ url_for('delete_player_account', player_user_id=player_user.id) }}" method="POST" class="d-inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-danger">Delete Account</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Toggle password visibility
+document.getElementById('togglePassword').addEventListener('click', function() {
+    const passwordInput = document.getElementById('new_password');
+    const icon = this.querySelector('i');
+    
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        passwordInput.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    }
+});
+
+// Set password from suggestion
+function setPassword(password) {
+    document.getElementById('new_password').value = password;
+    
+    // Trigger input event to update any form validation
+    const event = new Event('input', {
+        bubbles: true,
+        cancelable: true,
+    });
+    document.getElementById('new_password').dispatchEvent(event);
+}
+
+// Generate random password
+function generateRandomPassword() {
+    const length = 12;
+    const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
+    let password = '';
+    
+    for (let i = 0; i < length; i++) {
+        const randomIndex = Math.floor(Math.random() * charset.length);
+        password += charset[randomIndex];
+    }
+    
+    setPassword(password);
+}
+
+// Initialize form validation
+(function() {
+    'use strict';
+    
+    // Fetch the form element
+    const form = document.getElementById('editAccountForm');
+    if (!form) return;
+    
+    // Add validation on form submission
+    form.addEventListener('submit', function(event) {
+        if (!form.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        
+        form.classList.add('was-validated');
+    }, false);
+})();
+</script>
+{% endblock %}

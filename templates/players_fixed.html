@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}Players - Zambian Football Club{% endblock %}
+
+{% block content %}
+<!-- Existing content remains the same until the script section -->
+{% endblock %}
+
+{% block extra_js %}
+<!-- Include UI Utilities if not already included -->
+<script src="{{ url_for('static', filename='js/ui-utils.js') }}"></script>
+
+<script>
+// Delete Player Functionality
+document.addEventListener('DOMContentLoaded', function() {
+    // Event delegation for delete buttons
+    document.addEventListener('click', function(e) {
+        const deleteBtn = e.target.closest('.delete-player');
+        if (!deleteBtn) return;
+        
+        e.preventDefault();
+        const playerId = deleteBtn.getAttribute('data-id');
+        
+        // Get player name from the card or table row
+        const playerCard = deleteBtn.closest('.player-card') || deleteBtn.closest('tr');
+        let playerName = 'this player';
+        
+        if (playerCard) {
+            const nameElement = playerCard.querySelector('.card-title, .player-name') || 
+                              playerCard.querySelector('h5, h6, .text-truncate, td:nth-child(2)');
+            if (nameElement) {
+                playerName = nameElement.textContent.trim();
+            }
+        }
+        
+        // Create modal if it doesn't exist
+        let modal = document.getElementById('deletePlayerModal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.className = 'modal fade';
+            modal.id = 'deletePlayerModal';
+            modal.tabIndex = '-1';
+            modal.innerHTML = `
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Delete Player</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Are you sure you want to delete <strong>${playerName}</strong>?</p>
+                            <p class="text-muted">This action cannot be undone.</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <form id="deletePlayerForm" method="POST" style="display: inline;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-danger">
+                                    <span class="delete-button-text">Delete Player</span>
+                                    <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        } else {
+            // Update modal content with player name
+            const modalBody = modal.querySelector('.modal-body p:not(.text-muted)');
+            if (modalBody) {
+                modalBody.innerHTML = `Are you sure you want to delete <strong>${playerName}</strong>?`;
+            }
+        }
+        
+        // Initialize modal if not already done
+        const bsModal = new bootstrap.Modal(modal);
+        
+        // Handle form submission
+        const form = modal.querySelector('#deletePlayerForm');
+        if (form) {
+            // Update form action
+            form.action = `/players/${playerId}/delete`;
+            
+            // Remove any existing submit handlers
+            const newForm = form.cloneNode(true);
+            form.parentNode.replaceChild(newForm, form);
+            
+            // Add new submit handler
+            newForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const submitBtn = newForm.querySelector('button[type="submit"]');
+                const buttonText = submitBtn.querySelector('.delete-button-text');
+                const spinner = submitBtn.querySelector('.spinner-border');
+                
+                // Show loading state
+                submitBtn.disabled = true;
+                buttonText.textContent = 'Deleting...';
+                spinner.classList.remove('d-none');
+                
+                // Submit the form via fetch
+                fetch(newForm.action, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: new URLSearchParams(new FormData(newForm))
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Show success message
+                        if (window.UI && typeof UI.notify === 'function') {
+                            UI.notify('Player deleted successfully!', 'success');
+                        }
+                        
+                        // Remove the player card/row
+                        const playerElement = deleteBtn.closest('.player-card, tr');
+                        if (playerElement) {
+                            playerElement.remove();
+                        }
+                        
+                        // Update any counters if they exist
+                        const totalCount = document.querySelectorAll('.player-card, #playersTable tbody tr').length;
+                        const counter = document.getElementById('playersCount');
+                        if (counter) {
+                            counter.textContent = totalCount;
+                        }
+                        
+                        // Close the modal
+                        bsModal.hide();
+                    } else {
+                        throw new Error(data.message || 'Failed to delete player');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    if (window.UI && typeof UI.notify === 'function') {
+                        UI.notify(error.message || 'Failed to delete player. Please try again.', 'error');
+                    }
+                })
+                .finally(() => {
+                    // Restore button state
+                    submitBtn.disabled = false;
+                    buttonText.textContent = 'Delete Player';
+                    spinner.classList.add('d-none');
+                });
+            });
+        }
+        
+        // Show the modal
+        bsModal.show();
+    });
+});
+</script>
+{% endblock %}

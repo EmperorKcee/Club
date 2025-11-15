@@ -1,0 +1,147 @@
+{% extends "player/base.html" %}
+
+{% block title %}Team Staff - {{ team_settings.team_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .staff-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        height: 100%;
+        border: 1px solid rgba(0,0,0,0.1);
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    
+    .staff-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .staff-photo {
+        width: 150px;
+        height: 150px;
+        object-fit: cover;
+        border-radius: 50%;
+        margin: 1rem auto;
+        border: 3px solid var(--player-primary, #1a2a6c);
+        display: block;
+    }
+    
+    .staff-role {
+        color: var(--player-primary, #1a2a6c);
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    
+    .staff-name {
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+    }
+    
+    .staff-bio {
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+    
+    .staff-contact {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid #eee;
+    }
+    
+    .staff-contact a {
+        color: var(--player-primary, #1a2a6c);
+        text-decoration: none;
+    }
+    
+    .staff-contact a:hover {
+        text-decoration: underline;
+    }
+    
+    .staff-section {
+        margin-bottom: 2.5rem;
+    }
+    
+    .section-title {
+        position: relative;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid var(--player-primary, #1a2a6c);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 mb-0">Team Staff</h1>
+            <p class="text-muted">Meet our coaching and support staff</p>
+        </div>
+    </div>
+    
+    {% if staff_members %}
+        {% set roles = {} %}
+        {% for staff in staff_members %}
+            {% if staff.role not in roles %}
+                {% set _ = roles.update({staff.role: []}) %}
+            {% endif %}
+            {% set _ = roles[staff.role].append(staff) %}
+        {% endfor %}
+        
+        {% for role, members in roles.items() %}
+        <div class="staff-section">
+            <h2 class="section-title">{{ role }}</h2>
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                {% for staff in members %}
+                <div class="col">
+                    <div class="card h-100 staff-card">
+                        <div class="card-body text-center">
+                            <div class="staff-photo-wrapper">
+                                {% if staff.photo_url %}
+                                    <img src="{{ staff.photo_url }}" 
+                                         alt="{{ staff.first_name }} {{ staff.last_name }}" 
+                                         class="staff-photo"
+                                         onerror="this.onerror=null; this.src='{{ url_for('static', filename='img/default-avatar.png') }}'" />
+                                {% else %}
+                                    <div class="staff-photo-placeholder">
+                                        <i class="fas fa-user-tie fa-3x text-muted"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <h4 class="staff-name">{{ staff.first_name }} {{ staff.last_name }}</h4>
+                            <div class="staff-role">{{ staff.role }}</div>
+                            {% if staff.bio %}
+                                <p class="staff-bio">{{ staff.bio|truncate(100) }}</p>
+                            {% endif %}
+                            {% if staff.email or staff.phone %}
+                                <div class="staff-contact">
+                                    {% if staff.email %}
+                                        <div class="mb-1">
+                                            <a href="mailto:{{ staff.email }}">
+                                                <i class="fas fa-envelope me-2"></i>{{ staff.email|truncate(20) }}
+                                            </a>
+                                        </div>
+                                    {% endif %}
+                                    {% if staff.phone %}
+                                        <div>
+                                            <i class="fas fa-phone me-2"></i>{{ staff.phone }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="alert alert-info">
+            No staff members found.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

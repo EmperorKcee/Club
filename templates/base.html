@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en-ZM" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>{% block title %}{% if team_settings %}{{ team_settings.team_name }}{% else %}Zambian Football Club{% endif %}{% endblock %}</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Flags CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/flags.css') }}">
+    <!-- Favicon -->
+    <link rel="icon" href="{% if team_settings and team_settings.logo_url %}{{ url_for('static', filename=team_settings.logo_url) }}{% else %}{{ url_for('static', filename='img/favicon.ico') }}{% endif %}">
+</head>
+<body class="d-flex flex-column min-vh-100">
+    <!-- Dynamic Styles for Team Colors -->
+    <style id="team-colors">
+        :root {
+            --primary-color: {{ team_settings.primary_color if team_settings and team_settings.primary_color else '#b11601' }};
+            --secondary-color: {{ team_settings.secondary_color if team_settings and team_settings.secondary_color else '#f8f9fa' }};
+            --primary-hover: {{ team_settings.primary_color if team_settings and team_settings.primary_color else '#8f1201' }};
+            --text-color: {{ team_settings.text_color if team_settings and team_settings.text_color else '#ffffff' }};
+            --text-color-hover: {{ team_settings.text_color if team_settings and team_settings.text_color else '#f8f9fa' }};
+        }
+        
+        /* Button Styles */
+        .btn {
+            transition: all 0.2s ease-in-out;
+        }
+
+        /* Primary Buttons */
+        .btn-primary {
+            background-color: var(--primary-color) !important;
+            border-color: var(--primary-color) !important;
+            color: var(--text-color) !important;
+        }
+
+        .btn-primary:hover, .btn-primary:focus {
+            background-color: var(--primary-hover) !important;
+            border-color: var(--primary-hover) !important;
+            color: var(--text-color) !important;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Outline Primary Buttons */
+        .btn-outline-primary {
+            color: var(--primary-color) !important;
+            border-color: var(--primary-color) !important;
+            background-color: transparent !important;
+        }
+
+        .btn-outline-primary:hover, .btn-outline-primary:focus {
+            background-color: var(--primary-color) !important;
+            color: var(--text-color) !important;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Secondary Buttons */
+        .btn-secondary {
+            background-color: var(--secondary-color) !important;
+            border-color: var(--secondary-color) !important;
+            color: var(--text-color) !important;
+        }
+
+        .btn-secondary:hover, .btn-secondary:focus {
+            background-color: var(--secondary-hover) !important;
+            border-color: var(--secondary-hover) !important;
+            color: var(--text-color) !important;
+        }
+
+        /* Other Button Types - Ensure text is readable */
+        .btn-success, .btn-danger, .btn-warning, .btn-info {
+            color: #fff !important;
+        }
+        
+        /* Dark mode overrides */
+        [data-bs-theme="dark"] {
+            --bs-body-color: #f8f9fa;
+            --bs-body-bg: #1a1d20;
+            --bs-secondary-color: #adb5bd;
+            --bs-border-color: #495057;
+            --bs-light: #2c3034;
+            --bs-dark: #f8f9fa;
+        }
+
+        /* Base elements */
+        [data-bs-theme="dark"] body {
+            background-color: var(--bs-body-bg);
+            color: var(--bs-body-color);
+        }
+
+        /* Cards and containers */
+        [data-bs-theme="dark"] .card,
+        [data-bs-theme="dark"] .modal-content,
+        [data-bs-theme="dark"] .dropdown-menu,
+        [data-bs-theme="dark"] .list-group-item {
+            background-color: #2c3034;
+            color: #f8f9fa;
+            border-color: #495057;
+        }
+
+        /* Headers and footers */
+        [data-bs-theme="dark"] .card-header,
+        [data-bs-theme="dark"] .modal-header,
+        [data-bs-theme="dark"] .dropdown-header,
+        [data-bs-theme="dark"] .card-footer {
+            background-color: #343a40;
+            border-color: #495057;
+        }
+
+        /* Text colors */
+        [data-bs-theme="dark"] .text-muted {
+            color: #adb5bd !important;
+        }
+
+        [data-bs-theme="dark"] .text-dark {
+            color: #f8f9fa !important;
+        }
+
+        /* Form controls */
+        [data-bs-theme="dark"] .form-control,
+        [data-bs-theme="dark"] .form-select,
+        [data-bs-theme="dark"] .form-control:focus,
+        [data-bs-theme="dark"] .form-select:focus {
+            background-color: #2c3034;
+            border-color: #495057;
+            color: #f8f9fa;
+        }
+
+        [data-bs-theme="dark"] .form-control:disabled,
+        [data-bs-theme="dark"] .form-control[readonly] {
+            background-color: #3a3f44;
+            color: #ced4da;
+        }
+
+        /* Tables */
+        [data-bs-theme="dark"] .table {
+            --bs-table-bg: transparent;
+            --bs-table-color: #f8f9fa;
+            --bs-table-hover-color: #f8f9fa;
+            --bs-table-striped-color: #f8f9fa;
+            --bs-table-active-color: #f8f9fa;
+            --bs-table-hover-bg: rgba(255, 255, 255, 0.075);
+            --bs-table-striped-bg: rgba(0, 0, 0, 0.05);
+        }
+
+        [data-bs-theme="dark"] .table-bordered {
+            --bs-table-border-color: #495057;
+        }
+
+        /* Navigation */
+        /* Navbar base styles */
+        .navbar {
+            background-color: var(--primary-color) !important;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            border-color: var(--primary-color) !important;
+        }
+        
+        /* Navbar in light theme */
+        [data-bs-theme="light"] .navbar {
+            background-color: var(--primary-color) !important;
+            --bs-navbar-color: rgba(255, 255, 255, 0.9);
+            --bs-navbar-hover-color: rgba(255, 255, 255, 1);
+            --bs-navbar-active-color: #fff;
+            --bs-navbar-brand-color: #fff;
+            --bs-navbar-brand-hover-color: #fff;
+            --bs-navbar-toggler-border-color: rgba(255, 255, 255, 0.3);
+        }
+        
+        /* Navbar in dark theme */
+        [data-bs-theme="dark"] .navbar {
+            background-color: #212529 !important;
+            --bs-navbar-color: rgba(255, 255, 255, 0.9);
+            --bs-navbar-hover-color: rgba(255, 255, 255, 1);
+            --bs-navbar-active-color: #fff;
+            --bs-navbar-brand-color: #fff;
+            --bs-navbar-brand-hover-color: #fff;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Navbar toggler icon in dark mode */
+        [data-bs-theme="dark"] .navbar-toggler {
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+        
+        [data-bs-theme="dark"] .navbar-toggler-icon {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.9%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+        }
+        
+        /* Navbar links hover effect */
+        .navbar .nav-link {
+            position: relative;
+            padding: 0.5rem 1rem;
+            margin: 0 0.25rem;
+            transition: color 0.3s ease;
+        }
+        
+        .navbar .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: 0;
+            left: 50%;
+            background-color: currentColor;
+            transition: width 0.3s ease, left 0.3s ease;
+        }
+        
+        .navbar .nav-link:hover::after,
+        .navbar .nav-link.active::after {
+            width: 100%;
+            left: 0;
+        }
+        
+        .footer {
+            position: relative;
+            background-color: #343a40 !important;
+        }
+        
+        .footer .bg-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 0;
+        }
+        
+        .footer .container {
+            position: relative;
+            z-index: 1;
+        }
+        
+        [data-bs-theme="dark"] .navbar,
+        [data-bs-theme="dark"] .footer {
+            --bs-bg-opacity: 1;
+            background-color: rgba(var(--bs-dark-rgb), var(--bs-bg-opacity)) !important;
+        }
+        
+        /* Navbar text and links */
+        /* Navbar links in both themes */
+        .navbar .nav-link {
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .navbar .nav-link:hover,
+        .navbar .nav-link:focus {
+            color: rgba(255, 255, 255, 1);
+        }
+        
+        .navbar .nav-link.active {
+            color: #fff;
+            font-weight: 500;
+        }
+
+        /* Active navigation items */
+        .nav-link.active, .nav-link:hover {
+            color: var(--primary-color) !important;
+        }
+        
+        /* Links */
+        a, .text-primary {
+            color: var(--primary-color) !important;
+        }
+        
+        a:hover {
+            color: var(--primary-hover) !important;
+        }
+
+        /* Alerts */
+        [data-bs-theme="dark"] .alert {
+            --bs-alert-bg: rgba(255, 255, 255, 0.1);
+            --bs-alert-border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        /* Footer specific styles */
+        [data-bs-theme="dark"] .footer {
+            background-color: #212529 !important;
+        }
+        
+        [data-bs-theme="dark"] .footer h3,
+        [data-bs-theme="dark"] .footer a:not(.btn) {
+            color: #f8f9fa !important;
+        }
+        
+        [data-bs-theme="dark"] .footer a:not(.btn):hover {
+            color: #adb5bd !important;
+            text-decoration: none;
+        }
+        
+        [data-bs-theme="dark"] .footer .text-muted {
+            color: #adb5bd !important;
+        }
+        
+        [data-bs-theme="dark"] .footer .form-control {
+            background-color: #2c3034;
+            border-color: #495057;
+            color: #f8f9fa;
+        }
+        
+        [data-bs-theme="dark"] .footer .form-control:focus {
+            background-color: #2c3034;
+            border-color: var(--primary-color);
+            color: #f8f9fa;
+            box-shadow: 0 0 0 0.25rem rgba(177, 22, 1, 0.25);
+        }
+        
+        [data-bs-theme="dark"] .footer .btn-light {
+            background-color: #f8f9fa;
+            color: #212529;
+        }
+        
+        [data-bs-theme="dark"] .footer .btn-light:hover {
+            background-color: #e2e6ea;
+            color: #212529;
+        }
+        
+        /* Dropdowns */
+        [data-bs-theme="dark"] .dropdown-menu {
+            --bs-dropdown-bg: #2c3034;
+            --bs-dropdown-link-color: #f8f9fa;
+            --bs-dropdown-link-hover-color: #fff;
+            --bs-dropdown-link-hover-bg: rgba(255, 255, 255, 0.15);
+            --bs-dropdown-link-active-color: #fff;
+            --bs-dropdown-link-active-bg: var(--primary-color);
+        }
+
+        /* Pagination */
+        [data-bs-theme="dark"] .page-link {
+            background-color: #2c3034;
+            border-color: #495057;
+            color: #f8f9fa;
+        }
+
+        [data-bs-theme="dark"] .page-item.disabled .page-link {
+            background-color: #2c3034;
+            color: #6c757d;
+        }
+        
+        /* Apply to form elements */
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color) !important;
+            box-shadow: 0 0 0 0.25rem rgba({{ team_settings.primary_color[1:3]|default('177')|int(base=16) }}, {{ team_settings.primary_color[3:5]|default('22')|int(base=16) }}, {{ team_settings.primary_color[5:7]|default('1')|int(base=16) }}, 0.25) !important;
+        }
+        
+        /* Apply to pagination */
+        .page-item.active .page-link {
+            background-color: var(--primary-color) !important;
+            border-color: var(--primary-color) !important;
+        }
+        
+        .page-link {
+            color: var(--primary-color) !important;
+        }
+        
+        /* Navbar Styling */
+        .navbar {
+            background-color: var(--primary-color) !important;
+        }
+        
+        /* Footer Styling */
+        footer {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 3rem 0 0;
+            margin-top: auto;
+        }
+        
+        .footer-section h3 {
+            color: var(--secondary-color);
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+        }
+        
+        .footer-links a, .footer-contact p {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        
+        .footer-links a:hover, .footer-contact a {
+            color: white;
+            text-decoration: none;
+        }
+        
+        .social-links a {
+            display: inline-block;
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            color: white;
+            text-align: center;
+            line-height: 36px;
+            margin-right: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .social-links a:hover {
+            background: var(--secondary-color);
+            transform: translateY(-3px);
+        }
+        
+        .footer-bottom {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1.5rem 0;
+            margin-top: 3rem;
+            text-align: center;
+        }
+    </style>
+    
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark shadow-sm" id="mainNavbar">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center fw-bold" href="{{ url_for('index') }}" style="gap: 10px;">
+                {% if team_settings %}
+                    {% if team_settings.logo_url %}
+                        <img src="{{ url_for('static', filename=team_settings.logo_url) }}" 
+                             alt="{{ team_settings.team_name }} Logo" 
+                             style="height: 40px; width: auto; object-fit: contain; border-radius: 4px;">
+                    {% else %}
+                        <i class="fas fa-futbol" style="font-size: 1.5rem;"></i>
+                    {% endif %}
+                    <span class="d-none d-md-inline">{{ team_settings.team_name }}</span>
+                {% else %}
+                    <i class="fas fa-futbol me-2"></i>
+                    <span>Zambia FC</span>
+                {% endif %}
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                {% if current_user.is_authenticated %}
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint == 'dashboard' }}" 
+                           href="{{ url_for('dashboard') }}">
+                            <i class="fas fa-tachometer-alt me-1"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint == 'players' or request.endpoint in ['add_player', 'view_player', 'edit_player'] }}" 
+                           href="{{ url_for('players') }}">
+                            <i class="fas fa-users me-1"></i> Players
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint in ['matches', 'view_match', 'edit_match', 'add_match'] }}" 
+                           href="{{ url_for('matches') }}">
+                            <i class="fas fa-calendar-alt me-1"></i> Matches
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint == 'finances' }}" 
+                           href="{{ url_for('finances') }}">
+                            <i class="fas fa-chart-line me-1"></i> Finances
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint.startswith('staff.') }}" 
+                           href="{{ url_for('staff.staff_list') }}">
+                            <i class="fas fa-user-tie me-1"></i> Staff
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint.startswith('admin.') and 'training' in request.endpoint }}" 
+                           href="{{ url_for('admin.manage_trainings') }}">
+                            <i class="fas fa-dumbbell me-1"></i> Training
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint == 'fans.shop' }}" 
+                           href="{{ url_for('fans.shop') }}">
+                            <i class="fas fa-shopping-cart me-1"></i> Shop
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint == 'admin_player_accounts' }}" 
+                           href="{{ url_for('admin_player_accounts') }}">
+                            <i class="fas fa-user-cog me-1"></i> Player Accounts
+                        </a>
+                    </li>
+                    <li class="nav-item d-lg-none">
+                        <a class="nav-link {{ 'active' if request.endpoint.startswith('fans.') }}" href="{{ url_for('fans.fans') }}">
+                            <i class="fas fa-users me-1"></i> Fans
+                        </a>
+                    </li>
+                {% else %}
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint == 'index' }}" href="{{ url_for('index') }}">
+                            <i class="fas fa-home me-1"></i> Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint == 'about' }}" href="{{ url_for('about') }}">
+                            <i class="fas fa-info-circle me-1"></i> About
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint == 'contact' }}" href="{{ url_for('contact') }}">
+                            <i class="fas fa-envelope me-1"></i> Contact
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint.startswith('fans.') }}" href="{{ url_for('fans.fans') }}">
+                            <i class="fas fa-users me-1"></i> Fans
+                        </a>
+                    </li>
+                {% endif %}
+                </ul>
+                </ul>
+                <ul class="navbar-nav">
+                    {% if current_user.is_authenticated %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown" role="button" 
+                               data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-user-circle me-1"></i>
+                                <span class="d-none d-lg-inline">{{ current_user.username }}</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                                {% if current_user.role == 'admin' %}
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('admin_news') }}">
+                                        <i class="fas fa-newspaper me-2"></i>News Management
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                {% endif %}
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('profile') }}">
+                                        <i class="fas fa-user-edit me-2"></i>My Profile
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item {{ 'active' if request.endpoint == 'settings' }}" 
+                                       href="{{ url_for('settings') }}">
+                                        <i class="fas fa-cog me-2"></i>Settings
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item text-danger" href="{{ url_for('logout') }}">
+                                        <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                Login
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{{ url_for('unified_login') }}?type=admin">
+                                    <i class="fas fa-user-tie me-2"></i>Staff Login
+                                </a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('unified_login') }}?type=player">
+                                    <i class="fas fa-futbol me-2"></i>Player Portal
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+
+                            </ul>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container my-4">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="{% if current_user.is_authenticated %}mt-3 py-3{% else %}mt-5 py-4{% endif %} footer" style="background-color: #000000; color: white;">
+        <div class="bg-overlay"></div>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>{{ team_settings.team_name if team_settings else 'Zambia FC' }}</h3>
+                    <p>{{ team_settings.about if team_settings and team_settings.about else 'Building champions on and off the field. Our mission is to develop talented players and promote the beautiful game in Zambia.' }}</p>
+                    {% if not current_user.is_authenticated %}
+                    <div class="social-links">
+                        <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                        <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                        <a href="#" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                {% if not current_user.is_authenticated %}
+                <div class="footer-section">
+                    <h3>Quick Links</h3>
+                    <ul class="footer-links">
+                        <li><a href="{{ url_for('index') }}"><i class="fas fa-chevron-right me-2"></i>Home</a></li>
+                        <li><a href="{{ url_for('players') }}"><i class="fas fa-chevron-right me-2"></i>Players</a></li>
+                        <li><a href="{{ url_for('matches') }}"><i class="fas fa-chevron-right me-2"></i>Matches</a></li>
+                        <li><a href="{{ url_for('finances') }}"><i class="fas fa-chevron-right me-2"></i>Finances</a></li>
+                        <li><a href="{{ url_for('about') }}"><i class="fas fa-chevron-right me-2"></i>About Us</a></li>
+                        <li><a href="{{ url_for('contact') }}"><i class="fas fa-chevron-right me-2"></i>Contact</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>Contact Us</h3>
+                    <div class="footer-contact">
+                        {% if team_settings and team_settings.address %}
+                        <p><i class="fas fa-map-marker-alt"></i> {{ team_settings.address }}</p>
+                        {% else %}
+                        <p><i class="fas fa-map-marker-alt"></i> 123 Soccer Way, Lusaka, Zambia</p>
+                        {% endif %}
+                        
+                        {% if team_settings and team_settings.contact_phone %}
+                        <p><i class="fas fa-phone"></i> {{ team_settings.contact_phone }}</p>
+                        {% else %}
+                        <p><i class="fas fa-phone"></i> +260 123 456 789</p>
+                        {% endif %}
+                        
+                        {% if team_settings and team_settings.contact_email %}
+                        <p><i class="fas fa-envelope"></i> {{ team_settings.contact_email }}</p>
+                        {% else %}
+                        <p><i class="fas fa-envelope"></i> info@zambiafc.com</p>
+                        {% endif %}
+                        
+                        <p><i class="fas fa-clock"></i> Mon - Fri: 9:00 AM - 5:00 PM</p>
+                    </div>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>Newsletter</h3>
+                    <p>Subscribe to our newsletter for the latest news and updates.</p>
+                    <form class="mt-3">
+                        <div class="input-group mb-3">
+                            <input type="email" class="form-control" placeholder="Your Email" aria-label="Your Email" required>
+                            <button class="btn btn-light" type="submit"><i class="fas fa-paper-plane"></i></button>
+                        </div>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="footer-bottom">
+                <p class="mb-0">&copy; <span id="currentYear"></span> {{ team_settings.team_name if team_settings else 'Zambia Football Club' }}. All rights reserved.{% if not current_user.is_authenticated %} | 
+                <a href="{{ url_for('privacy_policy') }}" class="text-white-50">Privacy Policy</a> | 
+                <a href="{{ url_for('terms_of_service') }}" class="text-white-50">Terms of Service</a>{% endif %}</p>
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        document.getElementById('currentYear').textContent = new Date().getFullYear();
+    </script>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Theme Toggle Script -->
+    <script>
+        // Apply theme on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check for saved theme preference or use system preference
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+            const currentTheme = localStorage.getItem('theme') || 
+                              (prefersDarkScheme.matches ? 'dark' : 'light');
+            
+            // Apply the theme
+            function applyTheme(theme) {
+                document.documentElement.setAttribute('data-bs-theme', theme);
+                updateNavbarTheme(theme);
+            }
+            
+            // Update navbar theme
+            function updateNavbarTheme(theme) {
+                const navbar = document.getElementById('mainNavbar');
+                if (theme === 'dark') {
+                    navbar.classList.remove('bg-primary');
+                    navbar.classList.add('bg-dark');
+                } else {
+                    navbar.classList.remove('bg-dark');
+                    navbar.classList.add('bg-primary');
+                }
+            }
+            
+            // Initial theme application
+            applyTheme(currentTheme);
+            
+            // Update any theme toggles on the page
+            document.querySelectorAll('.theme-toggle').forEach(toggle => {
+                toggle.checked = (currentTheme === 'dark');
+                const label = toggle.closest('.form-check')?.querySelector('.form-check-label');
+                if (label) {
+                    label.textContent = currentTheme === 'dark' ? 'Dark Mode' : 'Light Mode';
+                }
+            });
+            
+            // Listen for system theme changes
+            prefersDarkScheme.addEventListener('change', e => {
+                if (!localStorage.getItem('theme')) { // Only if user hasn't set a preference
+                    const newTheme = e.matches ? 'dark' : 'light';
+                    applyTheme(newTheme);
+                }
+            });
+        });
+        
+        // Function to toggle theme
+        function toggleTheme(checkbox) {
+            const newTheme = checkbox.checked ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-bs-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            
+            // Update navbar theme with smooth transition
+            const navbar = document.getElementById('mainNavbar');
+            navbar.classList.remove('bg-primary', 'bg-dark');
+            navbar.classList.add(newTheme === 'dark' ? 'bg-dark' : 'bg-primary');
+            navbar.style.transition = 'background-color 0.5s ease-in-out';
+            setTimeout(() => {
+                navbar.style.transition = '';
+            }, 500);
+            
+            // Update all theme toggles on the page
+            document.querySelectorAll('.theme-toggle').forEach(toggle => {
+                if (toggle !== checkbox) {
+                    toggle.checked = checkbox.checked;
+                }
+            });
+            
+            // Update the label
+            const label = checkbox.closest('.form-check')?.querySelector('.form-check-label');
+            if (label) {
+                label.textContent = newTheme === 'dark' ? 'Dark Mode' : 'Light Mode';
+            }
+        }
+    </script>
+    
+    <!-- CSRF Token Setup -->
+    <script>
+        // Set up CSRF token for AJAX requests
+        document.addEventListener('DOMContentLoaded', function() {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            
+            // Set up AJAX to include CSRF token in headers
+            $.ajaxSetup({
+                beforeSend: function(xhr, settings) {
+                    if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+                        xhr.setRequestHeader("X-CSRFToken", csrfToken);
+                    }
+                }
+            });
+        });
+    </script>
+    
+    <!-- Color Update Script -->
+    <script>
+        // Color update functionality
+        function updateColors(primary, secondary) {
+            document.documentElement.style.setProperty('--primary-color', primary);
+            document.documentElement.style.setProperty('--secondary-color', secondary);
+            
+            // Force a reflow to ensure styles are recalculated
+            document.body.offsetHeight;
+        }
+        
+        // Listen for color picker changes
+        document.addEventListener('DOMContentLoaded', function() {
+            const primaryPicker = document.getElementById('primary_color');
+            const secondaryPicker = document.getElementById('secondary_color');
+            
+            if (primaryPicker) {
+                primaryPicker.addEventListener('input', function() {
+                    updateColors(this.value, '{{ team_settings.secondary_color if team_settings and team_settings.secondary_color else "#6c757d" }}');
+                });
+            }
+            
+            if (secondaryPicker) {
+                secondaryPicker.addEventListener('input', function() {
+                    updateColors('{{ team_settings.primary_color if team_settings and team_settings.primary_color else "#0d6efd" }}', this.value);
+                });
+            }
+        });
+    </script>
+    
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

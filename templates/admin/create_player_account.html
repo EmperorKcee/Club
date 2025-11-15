@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+
+{% block title %}Create Player Account - Admin{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <div>
+        <h1 class="h2">Create Player Account</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('players') }}">Players</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('admin_player_accounts') }}">Player Accounts</a></li>
+                <li class="breadcrumb-item active">Create Account</li>
+            </ol>
+        </nav>
+    </div>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{{ url_for('admin_player_accounts') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Back to Accounts
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Create Account for {{ player.full_name }}</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" id="createPlayerAccountForm">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="username" class="form-label">Username <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="username" name="username" 
+                                   value="{{ suggested_username }}" required
+                                   pattern="[a-zA-Z0-9._-]+" 
+                                   title="Username can only contain letters, numbers, dots, underscores, and hyphens">
+                            <div class="form-text">This will be used to login to the player portal</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" 
+                                   value="{{ player.email or (suggested_username + '@zambiafc.com') }}">
+                            <div class="form-text">Player's email address</div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="password" name="password" 
+                                       value="{{ suggested_password }}" required
+                                       minlength="8" 
+                                       title="Password must be at least 8 characters long">
+                                <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <div class="form-text">Temporary password for the player</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Password Suggestions</label>
+                            <div class="d-flex gap-2 flex-wrap">
+                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="setPassword('{{ suggested_password }}')">
+                                    {{ suggested_password }}
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="setPassword('{{ player.first_name.lower() }}{{ player.jersey_number }}{{ player.last_name[:2].lower() }}')">
+                                    {{ player.first_name.lower() }}{{ player.jersey_number }}{{ player.last_name[:2].lower() }}
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="generateRandomPassword()">
+                                    Generate Random
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Note:</strong> Make sure to share these credentials securely with the player. 
+                        They can change their password after first login.
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('admin_player_accounts') }}" class="btn btn-secondary">
+                            <i class="fas fa-times me-1"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-user-plus me-1"></i> Create Account
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Player Information -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Player Information</h5>
+            </div>
+            <div class="card-body text-center">
+                {% if player.photo_url %}
+                <img src="{{ url_for('static', filename=player.photo_url) }}" alt="{{ player.full_name }}" 
+                     class="rounded-circle mb-3" style="width: 100px; height: 100px; object-fit: cover;">
+                {% else %}
+                <div class="bg-light rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" 
+                     style="width: 100px; height: 100px;">
+                    <i class="fas fa-user fa-3x text-muted"></i>
+                </div>
+                {% endif %}
+                
+                <h5>{{ player.full_name }}</h5>
+                <div class="d-flex justify-content-center gap-2 mb-3">
+                    <span class="badge bg-primary">#{{ player.jersey_number }}</span>
+                    <span class="badge bg-info">{{ player.position }}</span>
+                </div>
+                
+                <div class="text-muted small">
+                    <div class="mb-1">
+                        <i class="fas fa-calendar me-1"></i>
+                        Age: {{ player.age }} years
+                    </div>
+                    <div class="mb-1">
+                        <i class="fas fa-flag me-1"></i>
+                        {{ player.nationality or 'Zambia' }}
+                    </div>
+                    {% if player.email %}
+                    <div class="mb-1">
+                        <i class="fas fa-envelope me-1"></i>
+                        {{ player.email }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Account Guidelines -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="mb-0">Account Guidelines</h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Username should be easy to remember
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Password should be at least 6 characters
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Use player's name and number for simplicity
+                    </li>
+                    <li class="mb-0">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Share credentials securely with player
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Toggle password visibility
+document.getElementById('togglePassword').addEventListener('click', function() {
+    const passwordField = document.getElementById('password');
+    const icon = this.querySelector('i');
+    
+    if (passwordField.type === 'password') {
+        passwordField.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        passwordField.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    }
+});
+
+// Set password function
+function setPassword(password) {
+    document.getElementById('password').value = password;
+}
+
+// Generate random password
+function generateRandomPassword() {
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    let password = '';
+    for (let i = 0; i < 8; i++) {
+        password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    document.getElementById('password').value = password;
+}
+
+// Auto-generate username based on player name
+document.addEventListener('DOMContentLoaded', function() {
+    const usernameField = document.getElementById('username');
+    const emailField = document.getElementById('email');
+    
+    usernameField.addEventListener('input', function() {
+        if (!emailField.value.includes('@')) {
+            emailField.value = this.value + '@zambiafc.com';
+        }
+    });
+});
+</script>
+{% endblock %}

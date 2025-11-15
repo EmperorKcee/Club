@@ -1,0 +1,333 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section py-5 py-lg-7 position-relative overflow-hidden">
+    <div class="container position-relative">
+        <div class="row align-items-center min-vh-75">
+            <div class="col-lg-7 text-center text-lg-start mb-5 mb-lg-0">
+                <div class="d-flex align-items-center justify-content-center justify-content-lg-start mb-3">
+                    <h1 class="display-4 fw-bold mb-0 me-3">Welcome to <span class="text-danger">FCMS</span></h1>
+                    <img src="{{ url_for('static', filename='images/FCMS Logo.jpg') }}" 
+                         alt="FAZ Logo" 
+                         class="img-fluid" 
+                         style="max-height: 80px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));">
+                </div>
+                <p class="lead mb-4">Streamline your club's operations with our comprehensive football management system. From player profiles to match analytics, we've got you covered.</p>
+                <div class="d-flex flex-wrap justify-content-center justify-content-lg-start gap-3">
+                    {% if not current_user.is_authenticated %}
+                        <a href="{{ url_for('unified_login') }}" class="btn btn-danger btn-lg px-4 py-3 fw-bold">
+                            <i class="fas fa-sign-in-alt me-2"></i>Login to Dashboard
+                        </a>
+                        <a href="#features" class="btn btn-outline-light btn-lg px-4 py-3 fw-bold">
+                            <i class="fas fa-info-circle me-2"></i>Learn More
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-danger btn-lg px-4 py-3 fw-bold">
+                            <i class="fas fa-tachometer-alt me-2"></i>Go to Dashboard
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-lg-5 d-none d-lg-block">
+                <div class="hero-image position-relative">
+                    <img src="{{ url_for('static', filename='img/football-players.png') }}" alt="Football Players" class="img-fluid" style="filter: drop-shadow(0 10px 20px rgba(0,0,0,0.2));">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="hero-shape"></div>
+</section>
+
+<!-- Features Section -->
+<section id="features" class="py-5 py-lg-7 bg-light">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="display-5 fw-bold mb-3">Powerful Features for Your Club</h2>
+            <p class="lead text-muted">Everything you need to manage your football club effectively</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card feature-card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon mx-auto">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <h3 class="h4 mt-4 mb-3">Player Management</h3>
+                        <p class="text-muted">Comprehensive player profiles, contract management, and performance tracking all in one place.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card feature-card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon mx-auto">
+                            <i class="fas fa-futbol"></i>
+                        </div>
+                        <h3 class="h4 mt-4 mb-3">Match Scheduling</h3>
+                        <p class="text-muted">Easily schedule matches, track results, and analyze team performance with advanced statistics.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card feature-card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon mx-auto">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h3 class="h4 mt-4 mb-3">Financial Tracking</h3>
+                        <p class="text-muted">Monitor club finances, track expenses, and plan your budget with our comprehensive tools.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section class="py-5 bg-white">
+    <div class="container">
+        <div class="row g-4 text-center">
+            <div class="col-6 col-md-3">
+                <div class="stat-item">
+                    <div class="stat-number display-5 fw-bold text-danger">{{ total_players }}</div>
+                    <div class="stat-label">Active Players</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-item">
+                    <div class="stat-number display-5 fw-bold text-danger">{{ total_goals }}</div>
+                    <div class="stat-label">Total Goals Scored</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-item">
+                    <div class="stat-number display-5 fw-bold text-danger">{{ avg_goals }}</div>
+                    <div class="stat-label">Avg Goals per Player</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-item">
+                    <div class="stat-number display-5 fw-bold text-danger">{{ win_percentage }}%</div>
+                    <div class="stat-label">Win Rate ({{ wins }}/{{ total_matches }})</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Top Scorers -->
+        {% if top_scorers %}
+        <div class="row mt-5">
+            <div class="col-12">
+                <h3 class="text-center mb-4">Top Scorers</h3>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Player</th>
+                                <th>Position</th>
+                                <th class="text-end">Goals</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for player, goals in top_scorers %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        {% if player.photo_url %}
+                                        <img src="{{ url_for('static', filename=player.photo_url) }}" 
+                                             alt="{{ player.full_name }}" 
+                                             class="rounded-circle me-2" 
+                                             style="width: 40px; height: 40px; object-fit: cover;">
+                                        {% else %}
+                                        <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center me-2" 
+                                             style="width: 40px; height: 40px;">
+                                            {{ player.first_name[0] }}{{ player.last_name[0] }}
+                                        </div>
+                                        {% endif %}
+                                        <span>{{ player.full_name }}</span>
+                                    </div>
+                                </td>
+                                <td>{{ player.position }}</td>
+                                <td class="text-end">{{ goals }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Recent Matches -->
+        {% if recent_matches %}
+        <div class="row mt-5">
+            <div class="col-12">
+                <h3 class="text-center mb-4">Recent Matches</h3>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Date</th>
+                                <th>Match</th>
+                                <th>Competition</th>
+                                <th>Result</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for match in recent_matches %}
+                            <tr>
+                                <td>{{ match.match_date.strftime('%b %d, %Y') }}</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="d-flex align-items-center">
+                                            {% if team_settings and team_settings.logo_url %}
+                                                <img src="{{ url_for('static', filename=team_settings.logo_url) }}" 
+                                                     alt="{{ team_settings.team_name if team_settings else 'Home Team' }}" 
+                                                     style="height: 30px; width: 30px; object-fit: contain;" 
+                                                     class="me-2"
+                                                     onerror="this.onerror=null; this.src='{{ url_for('static', filename='img/default-team.png') }}'">
+                                            {% endif %}
+                                            <span>{{ team_settings.team_name_abbr if team_settings and team_settings.team_name_abbr else (team_settings.team_name if team_settings else 'Home') }}</span>
+                                        </div>
+                                        <span class="mx-2">vs</span>
+                                        <div class="d-flex align-items-center">
+                                            <span class="me-2">{{ match.opponent }}</span>
+                                            {% if match.opponent_logo %}
+                                                <div class="position-relative" style="width: 32px; height: 32px; flex-shrink: 0;">
+                                                    <img src="{{ url_for('uploaded_team_logo', filename=match.opponent_logo.split('/')[-1]) }}" 
+                                                         alt="{{ match.opponent }}" 
+                                                         class="img-fluid" 
+                                                         style="height: 100%; width: 100%; object-fit: contain; border-radius: 4px; border: 1px solid #dee2e6;"
+                                                         onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                    <div class="w-100 h-100 d-none align-items-center justify-content-center" 
+                                                         style="background-color: #f8f9fa; border-radius: 4px; border: 1px solid #dee2e6;">
+                                                        <i class="fas fa-shield-alt text-muted"></i>
+                                                    </div>
+                                                </div>
+                                            {% else %}
+                                                <div class="position-relative" style="width: 32px; height: 32px; flex-shrink: 0;">
+                                                    <div class="w-100 h-100 d-flex align-items-center justify-content-center" 
+                                                         style="background-color: #f8f9fa; border-radius: 4px; border: 1px solid #dee2e6;">
+                                                        <i class="fas fa-shield-alt text-muted"></i>
+                                                    </div>
+                                                </div>
+                                            {% endif %}
+                                            <!-- Debug info -->
+                                            <script>
+                                                console.log('Match ID: {{ match.id }}');
+                                                console.log('Opponent: {{ match.opponent }}');
+                                                console.log('Logo path in DB: {{ match.opponent_logo }}');
+                                                console.log('Generated URL: {{ match.away_team_logo }}');
+                                            </script>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ match.competition or 'Friendly' }}</td>
+                                <td>
+                                    {% if match.status == 'completed' %}
+                                        <span class="badge {% if (match.venue == 'home' and match.home_goals > match.away_goals) or (match.venue == 'away' and match.home_goals < match.away_goals) %}bg-success{% elif match.home_goals == match.away_goals %}bg-warning{% else %}bg-danger{% endif %}">
+                                            {{ match.home_goals }} - {{ match.away_goals }}
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ match.status|title }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section py-5 py-lg-7 text-center text-white">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <h2 class="display-5 fw-bold mb-4">Ready to take your club to the next level?</h2>
+                <p class="lead mb-5">Login to access your club's management dashboard.</p>
+                {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-light btn-lg px-5 py-3 fw-bold text-danger">
+                        Go to Dashboard <i class="fas fa-arrow-right ms-2"></i>
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Testimonials Section -->
+<section class="py-5 py-lg-7 bg-light">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="display-5 fw-bold mb-3">What Our Users Say</h2>
+            <p class="lead text-muted">Don't just take our word for it</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="d-flex mb-3">
+                            <i class="fas fa-quote-left text-danger fa-2x opacity-25 me-3"></i>
+                            <p class="mb-0">This platform has transformed how we manage our club. The player management features are exceptional!</p>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <img src="https://ui-avatars.com/api/?name=Agrey+Chiyangi&background=random" alt="Agrey Chiyangi" class="rounded-circle" width="50">
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h5 class="mb-0">Agrey Chiyangi</h5>
+                                <small class="text-muted">Club Manager, Nchanga Rangers FC</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="d-flex mb-3">
+                            <i class="fas fa-quote-left text-danger fa-2x opacity-25 me-3"></i>
+                            <p class="mb-0">The financial tracking tools have saved us countless hours of work. Highly recommended!</p>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <img src="https://ui-avatars.com/api/?name=Innocent+Banda&background=random" alt="Innocent Banda" class="rounded-circle" width="50">
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h5 class="mb-0">Innocent Banda</h5>
+                                <small class="text-muted">Finance Director, Zanaco FC</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="d-flex mb-3">
+                            <i class="fas fa-quote-left text-danger fa-2x opacity-25 me-3"></i>
+                            <p class="mb-0">The match scheduling feature is a game-changer for our league. So easy to use and reliable.</p>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <img src="../images/Kalusha Bwalya.jpg" alt="Kalusha Bwalya" class="rounded-circle" width="50">
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h5 class="mb-0">Kalusha Bwalya</h5>
+                                <small class="text-muted">League Administrator</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}Contact Us - FCMS{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="h4 mb-0">Contact Us</h2>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Contact Information -->
+                        <div class="col-lg-5">
+                            <h4 class="border-bottom pb-2 mb-4">Get In Touch</h4>
+                            
+                            <div class="mb-4">
+                                <h5><i class="fas fa-map-marker-alt text-primary me-2"></i> Our Location</h5>
+                                <p class="ms-4">Olympia Park, Independence Avenue<br>Lusaka, Zambia</p>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <h5><i class="fas fa-phone-alt text-primary me-2"></i> Phone</h5>
+                                <p class="ms-4 mb-1">+260 211 123 4567</p>
+                                <p class="ms-4">+260 966 789 0123</p>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <h5><i class="fas fa-envelope text-primary me-2"></i> Email</h5>
+                                <p class="ms-4 mb-1">info@zambiafc.com</p>
+                                <p class="ms-4">tickets@zambiafc.com</p>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <h5><i class="fas fa-clock text-primary me-2"></i> Business Hours</h5>
+                                <div class="ms-4">
+                                    <p class="mb-1"><strong>Monday - Friday:</strong> 8:00 AM - 6:00 PM</p>
+                                    <p class="mb-1"><strong>Saturday:</strong> 9:00 AM - 4:00 PM</p>
+                                    <p class="mb-0"><strong>Sunday:</strong> Closed</p>
+                                </div>
+                            </div>
+                            
+                            <div class="social-links mt-4">
+                                <h5 class="mb-3">Follow Us</h5>
+                                <a href="#" class="btn btn-outline-primary btn-sm me-2 mb-2">
+                                    <i class="fab fa-facebook-f"></i>
+                                </a>
+                                <a href="#" class="btn btn-outline-info btn-sm me-2 mb-2">
+                                    <i class="fab fa-twitter"></i>
+                                </a>
+                                <a href="#" class="btn btn-outline-danger btn-sm me-2 mb-2">
+                                    <i class="fab fa-instagram"></i>
+                                </a>
+                                <a href="#" class="btn btn-outline-success btn-sm me-2 mb-2">
+                                    <i class="fab fa-whatsapp"></i>
+                                </a>
+                                <a href="#" class="btn btn-outline-primary btn-sm me-2 mb-2">
+                                    <i class="fab fa-linkedin-in"></i>
+                                </a>
+                                <a href="#" class="btn btn-outline-danger btn-sm me-2 mb-2">
+                                    <i class="fab fa-youtube"></i>
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <!-- Contact Form -->
+                        <div class="col-lg-7">
+                            <h4 class="border-bottom pb-2 mb-4">Send Us a Message</h4>
+                            <form id="contactForm" method="POST" action="{{ url_for('contact') }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="name" class="form-label">Your Name <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="name" name="name" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="email" class="form-label">Email Address <span class="text-danger">*</span></label>
+                                        <input type="email" class="form-control" id="email" name="email" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="subject" class="form-label">Subject <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="subject" name="subject" required>
+                                        <option value="" selected disabled>Select a subject</option>
+                                        <option value="General Inquiry">General Inquiry</option>
+                                        <option value="Ticket Information">Ticket Information</option>
+                                        <option value="Partnership">Partnership</option>
+                                        <option value="Media Inquiry">Media Inquiry</option>
+                                        <option value="Feedback">Feedback</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="message" class="form-label">Your Message <span class="text-danger">*</span></label>
+                                    <textarea class="form-control" id="message" name="message" rows="5" required></textarea>
+                                </div>
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-paper-plane me-2"></i>Send Message
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <!-- Map Section -->
+                    <div class="mt-5">
+                        <h4 class="border-bottom pb-2 mb-4">Find Us</h4>
+                        <div class="ratio ratio-16x9">
+                            <iframe 
+                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d944.5702212929294!2d28.296921969431853!3d-15.414257499248333!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x1940f37fcc3556e5%3A0xf09b9c2d6c0e4bbc!2sNational%20Heroes%20Stadium!5e0!3m2!1sen!2szm!4v1648123456789!5m2!1sen!2szm" 
+                                style="border:0;" 
+                                allowfullscreen="" 
+                                loading="lazy"
+                                referrerpolicy="no-referrer-when-downgrade">
+                            </iframe>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

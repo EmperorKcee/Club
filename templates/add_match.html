@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Add Match - Football Club Management{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Add New Match</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{{ url_for('matches') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Back to Matches
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('add_match') }}" enctype="multipart/form-data">
+                    {{ form.hidden_tag() }}
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    {{ form.opponent.label(class="form-label") }} <span class="text-danger">*</span>
+                    {{ form.opponent(class="form-control" + (' is-invalid' if form.opponent.errors else '')) }}
+                    {% if form.opponent.errors %}
+                        <div class="invalid-feedback">
+                            {{ form.opponent.errors[0] }}
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label for="opponent_logo" class="form-label">Opponent Logo</label>
+                    <input type="file" class="form-control" id="opponent_logo" name="opponent_logo" accept="image/*">
+                    <div class="form-text">Upload the opponent team's logo (JPG, PNG, or GIF)</div>
+                </div>
+                <div class="col-md-6">
+                    {{ form.competition.label(class="form-label") }}
+                    {{ form.competition(class="form-control" + (' is-invalid' if form.competition.errors else ''), list="competitions") }}
+                    <datalist id="competitions">
+                        {% for comp in competitions %}
+                        <option value="{{ comp }}">
+                        {% endfor %}
+                    </datalist>
+                    {% if form.competition.errors %}
+                        <div class="invalid-feedback">
+                            {{ form.competition.errors[0] }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    {{ form.match_date.label(class="form-label") }} <span class="text-danger">*</span>
+                    {{ form.match_date(class="form-control" + (' is-invalid' if form.match_date.errors else '')) }}
+                    {% if form.match_date.errors %}
+                        <div class="invalid-feedback">
+                            {{ form.match_date.errors[0] }}
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6">
+                    {{ form.venue.label(class="form-label") }} <span class="text-danger">*</span>
+                    {{ form.venue(class="form-control" + (' is-invalid' if form.venue.errors else '')) }}
+                    <div class="form-text">Enter the match venue (e.g., 'National Stadium, Lusaka')</div>
+                    {% if form.venue.errors %}
+                        <div class="invalid-feedback">
+                            {{ form.venue.errors[0] }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    {{ form.status.label(class="form-label") }}
+                    {{ form.status(class="form-select" + (' is-invalid' if form.status.errors else '')) }}
+                    {% if form.status.errors %}
+                        <div class="invalid-feedback">
+                            {{ form.status.errors[0] }}
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6">
+                    <div class="form-check form-switch mt-4 pt-2">
+                        {{ form.is_home(class="form-check-input" + (' is-invalid' if form.is_home.errors else ''), role="switch") }}
+                        {{ form.is_home.label(class="form-check-label") }}
+                        <div class="form-text">Check if this is a home match, uncheck for away match</div>
+                        {% if form.is_home.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.is_home.errors[0] }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                <a href="{{ url_for('matches') }}" class="btn btn-secondary me-md-2">Cancel</a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-1"></i> Save Match
+                </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Set default datetime to now + 1 hour
+    document.addEventListener('DOMContentLoaded', function() {
+        const now = new Date();
+        now.setHours(now.getHours() + 1);
+        now.setMinutes(0);
+        const dateTimeString = now.toISOString().slice(0, 16);
+        document.getElementById('match_date').value = dateTimeString;
+    });
+</script>
+{% endblock %}

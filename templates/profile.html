@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}My Profile - {{ team_settings.team_name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">My Profile</h3>
+                </div>
+                <div class="card-body">
+                    <!-- Profile Update Form -->
+                    <form method="POST" action="{{ url_for('profile') }}" enctype="multipart/form-data" class="mb-4">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="update_profile" value="true">
+                        <h4 class="mb-4">Profile Information</h4>
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-4 text-center">
+                                <div class="profile-picture-container mb-3">
+                                    <img src="{{ url_for('static', filename=user.profile_picture) }}" 
+                                         alt="Profile Picture" 
+                                         class="img-thumbnail rounded-circle profile-picture"
+                                         id="profilePicturePreview"
+                                         style="width: 150px; height: 150px; object-fit: cover;">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="profile_picture" class="form-label">Change Profile Picture</label>
+                                    <input class="form-control form-control-sm" 
+                                           type="file" 
+                                           id="profile_picture" 
+                                           name="profile_picture"
+                                           accept="image/*">
+                                    <div class="form-text">JPG, PNG or GIF. Max 2MB</div>
+                                </div>
+                            </div>
+                            <div class="col-md-8">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="first_name" class="form-label">First Name</label>
+                                        <input type="text" class="form-control" id="first_name" name="first_name" 
+                                               value="{{ user.first_name or '' }}">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="last_name" class="form-label">Last Name</label>
+                                        <input type="text" class="form-control" id="last_name" name="last_name" 
+                                               value="{{ user.last_name or '' }}">
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="username" class="form-label">Username <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="username" name="username" 
+                                           value="{{ user.username }}" required>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Email Address <span class="text-danger">*</span></label>
+                                    <input type="email" class="form-control" id="email" name="email" 
+                                           value="{{ user.email }}" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i> Update Profile
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <hr class="my-4">
+                    
+                    <!-- Password Change Form -->
+                    <form method="POST" action="{{ url_for('profile') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="change_password" value="true">
+                        <h4 class="mb-4">Change Password</h4>
+                        
+                        <div class="mb-3">
+                            <label for="current_password" class="form-label">Current Password</label>
+                            <input type="password" class="form-control" id="current_password" 
+                                   name="current_password" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="new_password" class="form-label">New Password</label>
+                            <input type="password" class="form-control" id="new_password" 
+                                   name="new_password" required minlength="8">
+                            <div class="form-text">Password must be at least 8 characters long.</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="confirm_password" class="form-label">Confirm New Password</label>
+                            <input type="password" class="form-control" id="confirm_password" 
+                                   name="confirm_password" required minlength="8">
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <button type="submit" class="btn btn-primary">Change Password</button>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="card-footer text-muted">
+                    <small>Account created on {{ user.join_date.strftime('%B %d, %Y') if user.join_date else 'N/A' }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Client-side password match validation
+const newPassword = document.getElementById('new_password');
+const confirmPassword = document.getElementById('confirm_password');
+
+function validatePassword() {
+    if (newPassword.value !== confirmPassword.value) {
+        confirmPassword.setCustomValidity("Passwords don't match");
+    } else {
+        confirmPassword.setCustomValidity('');
+    }
+}
+
+// Preview profile picture before upload
+const profilePictureInput = document.getElementById('profile_picture');
+const profilePicturePreview = document.getElementById('profilePicturePreview');
+
+if (profilePictureInput) {
+    profilePictureInput.addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                profilePicturePreview.src = e.target.result;
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+}
+
+if (newPassword && confirmPassword) {
+    newPassword.addEventListener('change', validatePassword);
+    confirmPassword.addEventListener('keyup', validatePassword);
+}
+</script>
+{% endblock %}

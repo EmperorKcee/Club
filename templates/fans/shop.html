@@ -1,0 +1,167 @@
+{% extends "fans/base.html" %}
+
+{% block title %}{{ team_settings.team_name }} - Team Shop{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<style>
+    .product-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        height: 100%;
+    }
+    .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    .product-image {
+        height: 200px;
+        object-fit: contain;
+        padding: 1rem;
+        background: #f8f9fa;
+    }
+    .category-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 1;
+    }
+    .price {
+        font-weight: 600;
+    }
+    .sale-price {
+        color: #dc3545;
+    }
+    .original-price {
+        text-decoration: line-through;
+        font-size: 0.9em;
+        color: #6c757d;
+    }
+    .category-section {
+        margin-bottom: 3rem;
+    }
+    .category-title {
+        position: relative;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.5rem;
+    }
+    .category-title:after {
+        content: '';
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        width: 60px;
+        height: 3px;
+        background: #0d6efd;
+    }
+</style>
+{% endblock %}
+
+{% block fan_content %}
+<div class="container py-4">
+    <!-- Hero Section -->
+    <div class="row mb-5">
+        <div class="col-12 text-center">
+            <h1 class="display-5 fw-bold mb-3">Official Team Store</h1>
+            <p class="lead text-muted">Show your support with our exclusive team merchandise. Quality gear for true fans!</p>
+        </div>
+    </div>
+
+    <!-- Categories Navigation -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex flex-wrap gap-2 justify-content-center">
+                <a href="#featured" class="btn btn-outline-primary">Featured</a>
+                {% for category in categories %}
+                    <a href="#{{ category.slug }}" class="btn btn-outline-secondary">{{ category.name }}</a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Featured Products -->
+    {% if featured_products %}
+    <div id="featured" class="category-section">
+        <h2 class="category-title">Featured Products</h2>
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
+            {% for product in featured_products %}
+                {% include 'fans/partials/product_card.html' %}
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Products by Category -->
+    {% for category in categories %}
+        {% set category_products = all_products|selectattr('category_id', 'equalto', category.id)|list %}
+        {% if category_products %}
+        <div id="{{ category.slug }}" class="category-section">
+            <h2 class="category-title">{{ category.name }}</h2>
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
+                {% for product in category_products %}
+                    {% include 'fans/partials/product_card.html' %}
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    {% endfor %}
+
+    <!-- All Products (Only show if there are products not in any category) -->
+    {% set uncategorized_products = all_products|rejectattr('category_id', 'in', categories|map(attribute='id')|list) %}
+    {% if uncategorized_products %}
+    <div class="category-section">
+        <h2 class="category-title">Other Products</h2>
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
+            {% for product in uncategorized_products %}
+                {% include 'fans/partials/product_card.html' %}
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+        
+        // Add to cart functionality
+        document.querySelectorAll('.add-to-cart').forEach(button => {
+            button.addEventListener('click', function() {
+                const productId = this.dataset.productId;
+                // TODO: Implement add to cart functionality
+                console.log('Add to cart:', productId);
+                
+                // Show success message
+                const toast = new bootstrap.Toast(document.getElementById('addToCartToast'));
+                toast.show();
+                
+                // Update cart count
+                const cartCount = document.querySelector('.cart-count');
+                if (cartCount) {
+                    cartCount.textContent = parseInt(cartCount.textContent || '0') + 1;
+                }
+            });
+        });
+    });
+</script>
+
+<!-- Add to Cart Toast -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+    <div id="addToCartToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header bg-success text-white">
+            <strong class="me-auto">Success</strong>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+            <i class="fas fa-check-circle me-2"></i> Item added to cart!
+        </div>
+    </div>
+</div>
+{% endblock %}
+

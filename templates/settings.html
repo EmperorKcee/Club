@@ -1,0 +1,454 @@
+{% extends "base.html" %}
+
+{% block title %}Team Settings - {{ team_settings.team_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .settings-card {
+        border-radius: 10px;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.05);
+        margin-bottom: 2rem;
+    }
+    .settings-card .card-header {
+        background-color: #b11601; /* Default color, will be overridden by JS */
+        color: white;
+        border-radius: 10px 10px 0 0 !important;
+    }
+    .logo-preview {
+        width: 150px;
+        height: 150px;
+        object-fit: contain;
+        background-color: #f8f9fa;
+        border: 2px dashed #dee2e6;
+        border-radius: 10px;
+        padding: 10px;
+        margin-bottom: 1rem;
+    }
+    .color-preview {
+        width: 50px;
+        height: 50px;
+        border-radius: 5px;
+        display: inline-block;
+        margin-right: 10px;
+        border: 1px solid #dee2e6;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">
+                <i class="fas fa-cog me-2"></i>Team Settings
+            </h1>
+            
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            <form method="POST" action="{{ url_for('update_settings') }}" enctype="multipart/form-data" class="settings-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <div class="card settings-card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Basic Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="team_name" class="form-label">Team Name</label>
+                                    <input type="text" class="form-control" id="team_name" name="team_name" 
+                                           value="{{ team_settings.team_name if team_settings.team_name else '' }}" required>
+                                    <small class="form-text text-muted">This will be displayed throughout the site</small>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="founded_year" class="form-label">Founded Year</label>
+                                    <input type="number" class="form-control" id="founded_year" name="founded_year" 
+                                           value="{{ team_settings.founded_year if team_settings.founded_year else '' }}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Team Logo</label>
+                                    <div class="d-flex flex-column align-items-center">
+                                        <img id="logo-preview" src="{{ url_for('static', filename=team_settings.logo_url) }}" 
+                                             alt="{{ team_settings.team_name }} Logo" class="logo-preview mb-3">
+                                        <input type="file" class="form-control" id="logo" name="logo" 
+                                               accept="image/*" onchange="previewLogo(this)">
+                                        <small class="form-text text-muted">Recommended size: 300x300px, PNG format</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label for="about" class="form-label">About the Team</label>
+                                    <textarea class="form-control" id="about" name="about" rows="3">{{ team_settings.about if team_settings.about else '' }}</textarea>
+                                    <small class="form-text text-muted">A brief description of your team that will appear in the footer</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card settings-card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Contact Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="contact_email" class="form-label">Contact Email</label>
+                                    <input type="email" class="form-control" id="contact_email" name="contact_email" 
+                                           value="{{ team_settings.contact_email }}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="contact_phone" class="form-label">Contact Phone</label>
+                                    <input type="tel" class="form-control" id="contact_phone" name="contact_phone" 
+                                           value="{{ team_settings.contact_phone }}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="address" class="form-label">Address</label>
+                            <textarea class="form-control" id="address" name="address" rows="2">{{ team_settings.address }}</textarea>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card settings-card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Color Scheme</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="primary_color" class="form-label">Primary Color</label>
+                                    <div class="input-group">
+                                        <input type="color" class="form-control form-control-color" id="primary_color" 
+                                               name="primary_color" value="{{ team_settings.primary_color }}" 
+                                               oninput="updateColorPreview('primary_color', 'primary_color_text', 'primary-preview')">
+                                        <input type="text" class="form-control" id="primary_color_text" 
+                                               value="{{ team_settings.primary_color }}" 
+                                               onchange="updateColorFromText('primary_color', 'primary_color_text', 'primary-preview')">
+                                        <span class="input-group-text p-0">
+                                            <div class="color-preview" id="primary-preview" 
+                                                 style="background-color: {{ team_settings.primary_color }};"></div>
+                                        </span>
+                                    </div>
+                                    <small class="form-text text-muted">Main brand color for headers and buttons</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="secondary_color" class="form-label">Secondary Color</label>
+                                    <div class="input-group">
+                                        <input type="color" class="form-control form-control-color" id="secondary_color" 
+                                               name="secondary_color" value="{{ team_settings.secondary_color }}"
+                                               oninput="updateColorPreview('secondary_color', 'secondary_color_text', 'secondary-preview')">
+                                        <input type="text" class="form-control" id="secondary_color_text" 
+                                               value="{{ team_settings.secondary_color }}"
+                                               onchange="updateColorFromText('secondary_color', 'secondary_color_text', 'secondary-preview')">
+                                        <span class="input-group-text p-0">
+                                            <div class="color-preview" id="secondary-preview" 
+                                                 style="background-color: {{ team_settings.secondary_color }};"></div>
+                                        </span>
+                                    </div>
+                                    <small class="form-text text-muted">Secondary color for backgrounds and accents</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="text_color" class="form-label">Text Color</label>
+                                    <div class="input-group">
+                                        <input type="color" class="form-control form-control-color" id="text_color" 
+                                               name="text_color" value="{{ team_settings.text_color }}"
+                                               oninput="updateColorPreview('text_color', 'text_color_text', 'text-preview')">
+                                        <input type="text" class="form-control" id="text_color_text" 
+                                               value="{{ team_settings.text_color }}"
+                                               onchange="updateColorFromText('text_color', 'text_color_text', 'text-preview')">
+                                        <span class="input-group-text p-0">
+                                            <div class="color-preview" id="text-preview" 
+                                                 style="background-color: {{ team_settings.text_color }};"></div>
+                                        </span>
+                                    </div>
+                                    <small class="form-text text-muted">Text color for content</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    Changes to colors will be applied immediately after saving.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Theme</label>
+                                    <div class="d-flex align-items-center">
+                                        <div class="form-check form-switch me-3">
+                                            <input class="form-check-input theme-toggle" type="checkbox" 
+                                                   id="themeToggle" 
+                                                   onchange="toggleTheme(this)"
+                                                   style="width: 3em; height: 1.5em;">
+                                            <label class="form-check-label ms-2" for="themeToggle">
+                                                <span id="themeLabel">Light Mode</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <small class="form-text text-muted">Toggle between light and dark mode</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="d-flex justify-content-between">
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i> Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Theme toggle functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const themeToggle = document.getElementById('themeToggle');
+        const themeLabel = document.getElementById('themeLabel');
+        
+        // Check for saved user preference, if any
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-bs-theme', currentTheme);
+        
+        // Update the toggle state
+        if (currentTheme === 'dark') {
+            themeToggle.checked = true;
+            themeLabel.textContent = 'Dark Mode';
+        } else {
+            themeToggle.checked = false;
+            themeLabel.textContent = 'Light Mode';
+        }
+        
+        // Listen for toggle changes
+        themeToggle.addEventListener('change', function() {
+            if (this.checked) {
+                document.documentElement.setAttribute('data-bs-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+                themeLabel.textContent = 'Dark Mode';
+            } else {
+                document.documentElement.setAttribute('data-bs-theme', 'light');
+                localStorage.setItem('theme', 'light');
+                themeLabel.textContent = 'Light Mode';
+            }
+        });
+    });
+    
+    // Function to preview logo
+    function previewLogo(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                document.getElementById('logo-preview').src = e.target.result;
+            }
+            
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+    
+    // Function to update color from text input
+    function updateColorFromText(colorInput, textInput, previewElement) {
+        let color = document.getElementById(textInput).value;
+        // Ensure the color has a # prefix
+        if (!color.startsWith('#')) {
+            color = '#' + color;
+            document.getElementById(textInput).value = color;
+        }
+        // Validate hex color (with or without #)
+        if (/^#?[0-9A-F]{6}$/i.test(color)) {
+            // Ensure color has # prefix
+            if (!color.startsWith('#')) {
+                color = '#' + color;
+                document.getElementById(textInput).value = color;
+            }
+            document.getElementById(colorInput).value = color;
+            document.getElementById(previewElement).style.backgroundColor = color;
+            updateColorPreview(colorInput, textInput, previewElement);
+        }
+    }
+
+    // Update color picker and preview
+    function updateColorPreview(colorInput, textInput, previewElement) {
+        const color = document.getElementById(colorInput).value;
+        document.getElementById(textInput).value = color;
+        document.getElementById(previewElement).style.backgroundColor = color;
+        
+        // Update the preview in real-time
+        if (colorInput === 'primary_color') {
+            // Update root CSS variables first
+            document.documentElement.style.setProperty('--primary-color', color);
+            
+            // Update navbar and footer
+            const navbar = document.querySelector('.navbar');
+            const footer = document.querySelector('.footer');
+            
+            if (navbar) {
+                navbar.style.backgroundColor = color;
+                navbar.style.borderColor = color;
+            }
+            
+            if (footer) {
+                footer.style.backgroundColor = color;
+            }
+            
+            // Update buttons and card headers
+            document.querySelectorAll('.btn-primary, .card-header').forEach(el => {
+                el.style.backgroundColor = color;
+                el.style.borderColor = color;
+            });
+            
+            // Update text colors for contrast
+            updateTextColorsForContrast(color);
+            
+        } else if (colorInput === 'secondary_color') {
+            // Update root CSS variables
+            document.documentElement.style.setProperty('--secondary-color', color);
+            
+            // Update backgrounds
+            document.querySelectorAll('.card, .form-control, .form-select').forEach(el => {
+                el.style.backgroundColor = color;
+            });
+            
+        } else if (colorInput === 'text_color') {
+            // Update root CSS variables
+            document.documentElement.style.setProperty('--text-color', color);
+            
+            // Update text colors
+            document.querySelectorAll('body, .card, .form-control, .form-select').forEach(el => {
+                el.style.color = color;
+            });
+            
+            // Update navbar text color for better contrast
+            updateTextColorsForContrast(document.documentElement.style.getPropertyValue('--primary-color') || '#b11601');
+        }
+        
+        // Helper function to update text colors for contrast
+        function updateTextColorsForContrast(bgColor) {
+            const textColor = getContrastYIQ(bgColor);
+            const navbar = document.querySelector('.navbar');
+            const footer = document.querySelector('.footer');
+            
+            if (navbar) {
+                navbar.style.color = textColor;
+                navbar.querySelectorAll('.navbar-brand, .nav-link, .nav-item .nav-link').forEach(el => {
+                    el.style.color = textColor;
+                });
+            }
+            
+            if (footer) {
+                footer.style.color = textColor;
+                footer.querySelectorAll('a, h3').forEach(el => {
+                    el.style.color = textColor;
+                });
+            }
+        }
+        
+        // Helper function to determine text color based on background for contrast
+        function getContrastYIQ(hexcolor) {
+            // If the color is a CSS variable, get its computed value
+            if (hexcolor.startsWith('var(')) {
+                const varName = hexcolor.match(/var\(--([a-zA-Z0-9-]+)\)/)[1];
+                hexcolor = getComputedStyle(document.documentElement).getPropertyValue('--' + varName).trim();
+            }
+            
+            // Ensure we have a valid hex color
+            if (!hexcolor.startsWith('#')) {
+                hexcolor = '#b11601'; // Default color if invalid
+            }
+            
+            hexcolor = hexcolor.replace('#', '');
+            
+            // Handle shorthand hex colors (e.g., #fff)
+            if (hexcolor.length === 3) {
+                hexcolor = hexcolor.split('').map(c => c + c).join('');
+            }
+            
+            const r = parseInt(hexcolor.substr(0,2), 16);
+            const g = parseInt(hexcolor.substr(2,2), 16);
+            const b = parseInt(hexcolor.substr(4,2), 16);
+            const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+            return (yiq >= 128) ? '#000000' : '#ffffff';
+        }
+    }
+
+    // Initialize color pickers
+    const primaryColor = document.getElementById('primary_color');
+    const primaryText = document.getElementById('primary_color_text');
+    const primaryPreview = primaryColor.closest('.mb-3').querySelector('.color-preview');
+    
+    const secondaryColor = document.getElementById('secondary_color');
+    const secondaryText = document.getElementById('secondary_color_text');
+    const secondaryPreview = secondaryColor.closest('.mb-3').querySelector('.color-preview');
+    
+    const textColor = document.getElementById('text_color');
+    const textColorText = document.getElementById('text_color_text');
+    const textColorPreview = textColor.closest('.mb-3').querySelector('.color-preview');
+    
+    // Set up event listeners
+    primaryColor.addEventListener('input', function() {
+        updateColorPreview(primaryColor, primaryText, primaryPreview);
+        updateTextColorPreview();
+    });
+    
+    primaryText.addEventListener('input', function() {
+        if (primaryText.value.match(/^#[0-9A-F]{6}$/i)) {
+            primaryColor.value = primaryText.value;
+            updateColorPreview(primaryColor, primaryText, primaryPreview);
+            updateTextColorPreview();
+        }
+    });
+    
+    secondaryColor.addEventListener('input', function() {
+        updateColorPreview(secondaryColor, secondaryText, secondaryPreview);
+    });
+    
+    secondaryText.addEventListener('input', function() {
+        if (secondaryText.value.match(/^#[0-9A-F]{6}$/i)) {
+            secondaryColor.value = secondaryText.value;
+        secondaryColor.addEventListener('input', () => {
+            updateColorPreview(secondaryColor, secondaryText, secondaryPreview);
+        });
+        
+        secondaryText.addEventListener('input', (e) => {
+            if (/^#[0-9A-F]{6}$/i.test(e.target.value)) {
+                secondaryColor.value = e.target.value;
+                updateColorPreview(secondaryColor, secondaryText, secondaryPreview);
+            }
+        });
+    }
+</script>
+{% endblock %}

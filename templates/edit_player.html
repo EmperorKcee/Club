@@ -1,0 +1,313 @@
+{% extends "base.html" %}
+
+{% block title %}Edit {{ player.first_name }} {{ player.last_name }} - Zambian Football Club{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Edit Player: {{ player.first_name }} {{ player.last_name }}</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="row">
+                        <!-- Player Photo -->
+                        <div class="col-md-4 text-center mb-4">
+                            <div class="mb-3">
+                                <img id="photo-preview" 
+                                     src="{{ url_for('static', filename=player.photo_url or 'img/default-player.png') }}" 
+                                     alt="{{ player.first_name }} {{ player.last_name }}" 
+                                     class="img-thumbnail"
+                                     style="width: 200px; height: 200px; object-fit: cover;">
+                            </div>
+                            <div class="mb-3">
+                                <label for="photo" class="form-label">Change Photo</label>
+                                <input type="file" class="form-control" id="photo" name="photo" accept="image/*">
+                            </div>
+                        </div>
+                        
+                        <!-- Player Details -->
+                        <div class="col-md-8">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="first_name" class="form-label">First Name <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="first_name" name="first_name" value="{{ player.first_name }}" required>
+                                        <div class="invalid-feedback">Please enter player's first name</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <input type="text" class="form-control" id="last_name" name="last_name" value="{{ player.last_name }}" required>
+                                        <div class="invalid-feedback">Please enter player's last name</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="position" class="form-label">Position <span class="text-danger">*</span></label>
+                                        <select class="form-select" id="position" name="position" required>
+                                            {% for code, name in positions.items() %}
+                                                <option value="{{ code }}" {% if player.position == code %}selected{% endif %}>{{ name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="salary" class="form-label">Weekly Salary (ZMW)</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">ZMW</span>
+                                            <input type="number" class="form-control" id="salary" name="salary" 
+                                                   value="{{ '%.2f'|format(player.salary) if player.salary else '0.00' }}" 
+                                                   min="0" step="0.01">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="jersey_number" class="form-label">Jersey Number <span class="text-danger">*</span></label>
+                                        <input type="number" class="form-control" id="jersey_number" name="jersey_number" 
+                                               value="{{ player.jersey_number }}" min="1" max="99" required>
+                                        <div class="invalid-feedback">Please enter a valid jersey number (1-99)</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="status" class="form-label">Status</label>
+                                        <select class="form-select" id="status" name="status">
+                                            <option value="active" {% if player.status == 'active' %}selected{% endif %}>Active</option>
+                                            <option value="injured" {% if player.status == 'injured' %}selected{% endif %}>Injured</option>
+                                            <option value="suspended" {% if player.status == 'suspended' %}selected{% endif %}>Suspended</option>
+                                            <option value="reserve" {% if player.status == 'reserve' %}selected{% endif %}>Reserve</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-12">
+                                    <div class="mb-3">
+                                        <label for="bio" class="form-label">Bio/Notes</label>
+                                        <textarea class="form-control" id="bio" name="bio" rows="3">{{ player.bio or '' }}</textarea>
+                                    </div>
+                                </div>
+                                
+                                <!-- Contract Information Section -->
+                                <div class="col-12">
+                                    <hr class="my-4">
+                                    <h5 class="mb-3">
+                                        <i class="fas fa-file-contract me-2"></i>Contract Information
+                                    </h5>
+                                </div>
+                                
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="join_date" class="form-label">Join Date</label>
+                                        <input type="date" class="form-control" id="join_date" name="join_date" 
+                                               value="{{ player.join_date.strftime('%Y-%m-%d') if player.join_date else '' }}">
+                                        <div class="form-text">Date when player joined the club</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="contract_end" class="form-label">Contract End Date</label>
+                                        <input type="date" class="form-control" id="contract_end" name="contract_end" 
+                                               value="{{ player.contract_end.strftime('%Y-%m-%d') if player.contract_end else '' }}">
+                                        <div class="form-text">When the player's contract expires</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="contract_status_display" class="form-label">Contract Status</label>
+                                        <div class="form-control-plaintext" id="contract_status_display">
+                                            {% if player.contract_end %}
+                                                {% if player.contract_status == 'expired' %}
+                                                    <span class="badge bg-danger">
+                                                        <i class="fas fa-exclamation-circle me-1"></i>{{ player.contract_status_text }}
+                                                    </span>
+                                                {% elif player.contract_status == 'expiring_soon' %}
+                                                    <span class="badge bg-warning text-dark">
+                                                        <i class="fas fa-clock me-1"></i>{{ player.contract_status_text }}
+                                                    </span>
+                                                {% elif player.contract_status == 'expiring_3_months' or player.contract_status == 'expiring_6_months' %}
+                                                    <span class="badge bg-info">
+                                                        <i class="fas fa-calendar me-1"></i>{{ player.contract_status_text }}
+                                                    </span>
+                                                {% else %}
+                                                    <span class="badge bg-success">
+                                                        <i class="fas fa-check-circle me-1"></i>{{ player.contract_status_text }}
+                                                    </span>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="badge bg-secondary">
+                                                    <i class="fas fa-question-circle me-1"></i>No Contract Set
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Contact Information Section -->
+                                <div class="col-12">
+                                    <hr class="my-4">
+                                    <h5 class="mb-3">
+                                        <i class="fas fa-address-book me-2"></i>Contact Information
+                                    </h5>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="email" class="form-label">Email Address</label>
+                                        <input type="email" class="form-control" id="email" name="email" 
+                                               value="{{ player.email or '' }}">
+                                        <div class="form-text">For player portal access</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="phone" class="form-label">Phone Number</label>
+                                        <input type="tel" class="form-control" id="phone" name="phone" 
+                                               value="{{ player.phone or '' }}">
+                                        <div class="form-text">Contact phone number</div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Player Statistics Section -->
+                                <div class="col-12">
+                                    <hr class="my-4">
+                                    <h5 class="mb-3">Player Statistics</h5>
+                                </div>
+                                
+                                <div class="col-md-6 col-lg-4">
+                                    <div class="mb-3">
+                                        <label for="matches_played" class="form-label">Matches Played</label>
+                                        <input type="number" class="form-control" id="matches_played" name="matches_played" 
+                                               value="{{ player.stats.matches_played|default(0) }}" min="0">
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6 col-lg-4">
+                                    <div class="mb-3">
+                                        <label for="goals" class="form-label">Goals</label>
+                                        <input type="number" class="form-control" id="goals" name="goals" 
+                                               value="{{ player.stats.goals|default(0) }}" min="0">
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6 col-lg-4">
+                                    <div class="mb-3">
+                                        <label for="assists" class="form-label">Assists</label>
+                                        <input type="number" class="form-control" id="assists" name="assists" 
+                                               value="{{ player.stats.assists|default(0) }}" min="0">
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6 col-lg-4">
+                                    <div class="mb-3">
+                                        <label for="yellow_cards" class="form-label">Yellow Cards</label>
+                                        <input type="number" class="form-control" id="yellow_cards" name="yellow_cards" 
+                                               value="{{ player.stats.yellow_cards|default(0) }}" min="0">
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6 col-lg-4">
+                                    <div class="mb-3">
+                                        <label for="red_cards" class="form-label">Red Cards</label>
+                                        <input type="number" class="form-control" id="red_cards" name="red_cards" 
+                                               value="{{ player.stats.red_cards|default(0) }}" min="0">
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6 col-lg-4">
+                                    <div class="mb-3">
+                                        <label for="clean_sheets" class="form-label">Clean Sheets</label>
+                                        <input type="number" class="form-control" id="clean_sheets" name="clean_sheets" 
+                                               value="{{ player.stats.clean_sheets|default(0) }}" min="0">
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6 col-lg-4">
+                                    <div class="mb-3">
+                                        <label for="minutes_played" class="form-label">Minutes Played</label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" id="minutes_played" name="minutes_played" 
+                                                   value="{{ player.stats.minutes_played|default(0) }}" min="0">
+                                            <span class="input-group-text">minutes</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-12">
+                                    <hr class="my-4">
+                                    <div class="d-flex justify-content-between">
+                                        <a href="{{ url_for('players') }}" class="btn btn-outline-secondary">
+                                            <i class="fas fa-arrow-left me-1"></i> Cancel
+                                        </a>
+                                        <div>
+                                            <a href="{{ url_for('view_player', player_id=player.id) }}" class="btn btn-outline-primary me-2">
+                                                <i class="fas fa-eye me-1"></i> View
+                                            </a>
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="fas fa-save me-1"></i> Save Changes
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Form validation
+(function () {
+    'use strict'
+    
+    // Fetch all the forms we want to apply custom Bootstrap validation styles to
+    var forms = document.querySelectorAll('.needs-validation')
+    
+    // Loop over them and prevent submission
+    Array.prototype.slice.call(forms).forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+            if (!form.checkValidity()) {
+                event.preventDefault()
+                event.stopPropagation()
+            }
+            
+            form.classList.add('was-validated')
+        }, false)
+    })
+})()
+
+// Preview image before upload
+const photoInput = document.getElementById('photo');
+if (photoInput) {
+    photoInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById('photo-preview');
+                if (preview) {
+                    preview.src = e.target.result;
+                }
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+}
+</script>
+{% endblock %}

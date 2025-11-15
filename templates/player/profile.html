@@ -1,0 +1,333 @@
+{% extends "player/base.html" %}
+
+{% block extra_head %}
+<style>
+    /* Profile Photo Styles */
+    .profile-avatar {
+        width: 180px;
+        height: 180px;
+        object-fit: cover;
+        border-radius: 50%;
+        border: 5px solid #fff;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        margin: 0 auto;
+        display: block;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .profile-avatar:hover {
+        transform: scale(1.03);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+    
+    .profile-avatar-placeholder {
+        width: 180px;
+        height: 180px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ed 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .profile-avatar-placeholder i {
+        font-size: 4rem;
+        color: #adb5bd;
+    }
+    
+    .player-card {
+        border: none;
+        border-radius: 12px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        height: 100%;
+        background: #fff;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        display: flex;
+        flex-direction: column;
+        min-height: 400px;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .profile-avatar,
+        .profile-avatar-placeholder {
+            width: 150px;
+            height: 150px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block title %}My Profile - Player Portal{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-4">
+        <!-- Player Photo and Basic Info -->
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                <div class="position-relative mb-4">
+                    {% if player.photo_url %}
+                        {% if player.photo_url.startswith(('http://', 'https://')) %}
+                            {% set photo_url = player.photo_url %}
+                        {% else %}
+                            {% set photo_url = url_for('uploaded_player_photo', filename=player.photo_url.split('/')[-1]) %}
+                        {% endif %}
+                        <img src="{{ photo_url }}" 
+                             alt="{{ player.full_name }}" 
+                             class="profile-avatar"
+                             onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    {% endif %}
+                    <div class="profile-avatar-placeholder {% if player.photo_url %}d-none{% endif %}">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    
+                    <!-- Edit Photo Button (if needed in the future) -->
+                    <!--
+                    <button class="btn btn-sm btn-outline-primary position-absolute bottom-0 end-0 rounded-circle" 
+                            style="width: 40px; height: 40px;"
+                            data-bs-toggle="modal" 
+                            data-bs-target="#editPhotoModal">
+                        <i class="fas fa-camera"></i>
+                    </button>
+                    -->
+                </div>
+                
+                <h3 class="mb-2">{{ player.full_name }}</h3>
+                <div class="d-flex justify-content-center gap-2 mb-3">
+                    <span class="badge bg-primary fs-6">#{{ player.jersey_number }}</span>
+                    <span class="badge bg-info fs-6">{{ player.position }}</span>
+                </div>
+                
+                {% if player.status == 'active' %}
+                    <span class="badge bg-success mb-3">Active</span>
+                {% elif player.status == 'injured' %}
+                    <span class="badge bg-warning text-dark mb-3">Injured</span>
+                {% elif player.status == 'suspended' %}
+                    <span class="badge bg-danger mb-3">Suspended</span>
+                {% else %}
+                    <span class="badge bg-secondary mb-3">Inactive</span>
+                {% endif %}
+                
+                <div class="text-muted">
+                    <div class="mb-2">
+                        <i class="fas fa-calendar-alt me-2"></i>
+                        Joined {{ player.join_date.strftime('%B %d, %Y') if player.join_date else 'N/A' }}
+                    </div>
+                    <div class="mb-2">
+                        <i class="fas fa-flag me-2"></i>
+                        {{ player.nationality or 'Zambia' }}
+                    </div>
+                    {% if player.age %}
+                    <div class="mb-2">
+                        <i class="fas fa-birthday-cake me-2"></i>
+                        {{ player.age }} years old
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Information -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-address-card me-2"></i>Contact Information
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if player.email %}
+                <div class="mb-3">
+                    <label class="form-label text-muted">Email</label>
+                    <div class="fw-semibold">{{ player.email }}</div>
+                </div>
+                {% endif %}
+                
+                {% if player.phone %}
+                <div class="mb-3">
+                    <label class="form-label text-muted">Phone</label>
+                    <div class="fw-semibold">{{ player.phone }}</div>
+                </div>
+                {% endif %}
+                
+                {% if not player.email and not player.phone %}
+                <div class="text-center text-muted py-3">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Contact information not available
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <!-- Player Statistics -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>Season Statistics
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if player.stats %}
+                <div class="row text-center g-3">
+                    <div class="col-md-3 col-6">
+                        <div class="p-3 bg-light rounded">
+                            <div class="display-6 fw-bold text-primary">{{ player.stats.matches_played or 0 }}</div>
+                            <div class="text-muted">Matches Played</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <div class="p-3 bg-light rounded">
+                            <div class="display-6 fw-bold text-success">{{ player.stats.goals or 0 }}</div>
+                            <div class="text-muted">Goals</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <div class="p-3 bg-light rounded">
+                            <div class="display-6 fw-bold text-info">{{ player.stats.assists or 0 }}</div>
+                            <div class="text-muted">Assists</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <div class="p-3 bg-light rounded">
+                            <div class="display-6 fw-bold text-warning">{{ player.stats.yellow_cards or 0 }}</div>
+                            <div class="text-muted">Yellow Cards</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row text-center g-3 mt-3">
+                    <div class="col-md-3 col-6">
+                        <div class="p-3 bg-light rounded">
+                            <div class="display-6 fw-bold text-danger">{{ player.stats.red_cards or 0 }}</div>
+                            <div class="text-muted">Red Cards</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <div class="p-3 bg-light rounded">
+                            <div class="display-6 fw-bold text-secondary">{{ player.stats.clean_sheets or 0 }}</div>
+                            <div class="text-muted">Clean Sheets</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <div class="p-3 bg-light rounded">
+                            <div class="display-6 fw-bold text-dark">{{ player.stats.minutes_played or 0 }}</div>
+                            <div class="text-muted">Minutes Played</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <div class="p-3 bg-light rounded">
+                            {% if player.stats.matches_played and player.stats.matches_played > 0 %}
+                            <div class="display-6 fw-bold text-primary">{{ "%.1f"|format(player.stats.goals / player.stats.matches_played) }}</div>
+                            {% else %}
+                            <div class="display-6 fw-bold text-primary">0.0</div>
+                            {% endif %}
+                            <div class="text-muted">Goals/Match</div>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
+                    <h5>No statistics available</h5>
+                    <p class="text-muted">Statistics will appear here once you start playing matches.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Player Bio -->
+        {% if player.bio %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-user-edit me-2"></i>About Me
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-0">{{ player.bio|replace('\n', '<br>')|safe }}</p>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Contract Information -->
+        {% if player.contract_end %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-file-contract me-2"></i>Contract Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <label class="form-label text-muted">Contract End Date</label>
+                        <div class="fw-semibold">{{ player.contract_end.strftime('%B %d, %Y') }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-muted">Contract Status</label>
+                        {% set days_remaining = (player.contract_end - today).days if player.contract_end > today else 0 %}
+                        {% if days_remaining > 365 %}
+                        <div class="fw-semibold text-success">
+                            <i class="fas fa-check-circle me-1"></i>Active ({{ (days_remaining / 365)|round|int }} years remaining)
+                        </div>
+                        {% elif days_remaining > 90 %}
+                        <div class="fw-semibold text-warning">
+                            <i class="fas fa-exclamation-triangle me-1"></i>Expiring Soon ({{ days_remaining }} days)
+                        </div>
+                        {% elif days_remaining > 0 %}
+                        <div class="fw-semibold text-danger">
+                            <i class="fas fa-clock me-1"></i>Expiring Very Soon ({{ days_remaining }} days)
+                        </div>
+                        {% else %}
+                        <div class="fw-semibold text-danger">
+                            <i class="fas fa-times-circle me-1"></i>Expired
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Account Information -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-cog me-2"></i>Account Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <label class="form-label text-muted">Username</label>
+                        <div class="fw-semibold">{{ current_user.username }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-muted">Last Login</label>
+                        <div class="fw-semibold">
+                            {% if current_user.last_login %}
+                            {{ current_user.last_login.strftime('%B %d, %Y at %H:%M') }}
+                            {% else %}
+                            First time login
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-3">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        To update your profile information, please contact your team manager.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

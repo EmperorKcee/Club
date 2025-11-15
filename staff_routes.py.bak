@@ -1,0 +1,225 @@
+import os
+from werkzeug.utils import secure_filename
+from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, abort, jsonify, send_from_directory
+from flask_login import login_required, current_user, login_manager
+from datetime import datetime, timedelta
+from extensions import db
+from models import Staff, TeamSettings, User
+from werkzeug.security import generate_password_hash
+import uuid
+
+# Configure upload folder for staff photos
+UPLOAD_FOLDER = os.path.join('static', 'uploads', 'staff')
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+# Allowed file extensions for profile pictures
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+# Create a Blueprint for staff routes
+staff_bp = Blueprint('staff', __name__, template_folder='templates')
+
+def save_staff_photo(file):
+    if not file or file.filename == '':
+        return None
+    
+    # Create upload directory if it doesn't exist
+    upload_dir = os.path.join(current_app.static_folder, 'uploads', 'staff')
+    os.makedirs(upload_dir, exist_ok=True)
+    
+    # Generate a unique filename
+    filename = secure_filename(file.filename)
+    unique_filename = f"{uuid.uuid4().hex}_{filename}"
+    filepath = os.path.join(upload_dir, unique_filename)
+    
+    try:
+        file.save(filepath)
+        return os.path.join('uploads', 'staff', unique_filename)
+    except Exception as e:
+        current_app.logger.error(f"Error saving staff photo: {str(e)}")
+        return None
+
+# Staff Management Routes
+@staff_bp.route('/staff')
+@login_required
+def staff_list():
+    staff_members = Staff.query.order_by(Staff.last_name, Staff.first_name).all()
+    return render_template('staff/list.html', staff_members=staff_members)
+
+@staff_bp.route('/staff/add', methods=['GET', 'POST'])
+@login_required
+def add_staff():
+    if request.method == 'POST':
+        try:
+            first_name = request.form.get('first_name')
+            last_name = request.form.get('last_name')
+            role = request.form.get('role')
+            email = request.form.get('email')
+            phone = request.form.get('phone')
+            hire_date = request.form.get('hire_date')
+            
+            # Handle file upload
+            photo_url = None
+            if 'photo' in request.files:
+                file = request.files['photo']
+                if file.filename != '':
+                    if file and allowed_file(file.filename):
+                        photo_url = save_staff_photo(file)
+            
+            staff = Staff(
+                first_name=first_name,
+                last_name=last_name,
+                role=role,
+                email=email,
+                phone=phone,
+                hire_date=datetime.strptime(hire_date, '%Y-%m-%d') if hire_date else None,
+                photo_url=photo_url,
+                is_active=True
+            )
+            
+            db.session.add(staff)
+            db.session.commit()
+            flash('Staff member added successfully!', 'success')
+            return redirect(url_for('staff.staff_list'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error adding staff member: {str(e)}', 'danger')
+    
+    return render_template('staff/form.html')
+
+@staff_bp.route('/staff/<int:staff_id>')
+@login_required
+def view_staff(staff_id):
+    staff = Staff.query.get_or_404(staff_id)
+    return render_template('staff/view.html', staff=staff)
+
+@staff_bp.route('/staff/edit/<int:staff_id>', methods=['GET', 'POST'])
+@login_required
+def edit_staff(staff_id):
+    staff = Staff.query.get_or_404(staff_id)
+    
+    if request.method == 'POST':
+        try:
+            staff.first_name = request.form.get('first_name')
+            staff.last_name = request.form.get('last_name')
+            staff.role = request.form.get('role')
+            staff.email = request.form.get('email')
+            staff.phone = request.form.get('phone')
+            hire_date = request.form.get('hire_date')
+            staff.hire_date = datetime.strptime(hire_date, '%Y-%m-%d') if hire_date else None
+            staff.is_active = 'is_active' in request.form
+            
+            # Handle file upload
+            if 'photo' in request.files:
+                file = request.files['photo']
+                if file.filename != '':
+                    if file and allowed_file(file.filename):
+                        # Delete old photo if exists
+                        if staff.photo_url:
+                            try:
+                                old_photo_path = os.path.join(current_app.static_folder, staff.photo_url)
+                                if os.path.exists(old_photo_path):
+                                    os.remove(old_photo_path)
+                            except Exception as e:
+                                current_app.logger.error(f"Error deleting old photo: {str(e)}")
+                        
+                        # Save new photo
+                        staff.photo_url = save_staff_photo(file)
+            
+            db.session.commit()
+            flash('Staff member updated successfully!', 'success')
+            return redirect(url_for('staff.view_staff', staff_id=staff.id))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error updating staff member: {str(e)}', 'danger')
+    
+    return render_template('staff/form.html', staff=staff)
+
+@staff_bp.route('/staff/delete/<int:staff_id>', methods=['POST'])
+@login_required
+def delete_staff(staff_id):
+    staff = Staff.query.get_or_404(staff_id)
+    
+    try:
+        # Delete photo if exists
+        if staff.photo_url:
+            try:
+                photo_path = os.path.join(current_app.static_folder, staff.photo_url)
+                if os.path.exists(photo_path):
+                    os.remove(photo_path)
+            except Exception as e:
+                current_app.logger.error(f"Error deleting staff photo: {str(e)}")
+        
+        db.session.delete(staff)
+        db.session.commit()
+        flash('Staff member deleted successfully!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error deleting staff member: {str(e)}', 'danger')
+    
+    return redirect(url_for('staff.staff_list'))
+                        staff.photo_url = os.path.join('uploads', 'staff', unique_filename)
+                    else:
+                        flash('Invalid file type. Allowed types are: png, jpg, jpeg, gif', 'warning')
+            
+            # Handle photo removal if checkbox is checked
+            if 'remove_photo' in request.form and request.form['remove_photo'] == 'on':
+                if staff.photo_url:
+                    old_photo_path = os.path.join(current_app.root_path, 'static', staff.photo_url)
+                    if os.path.exists(old_photo_path):
+                        try:
+                            os.remove(old_photo_path)
+                        except Exception as e:
+                            current_app.logger.error(f"Error removing photo: {str(e)}")
+                staff.photo_url = None
+            
+            # Update other fields
+            staff.first_name = request.form['first_name']
+            staff.last_name = request.form['last_name']
+            staff.role = request.form['role']
+            staff.email = request.form.get('email')
+            staff.phone = request.form.get('phone')
+            staff.hire_date = datetime.strptime(request.form.get('hire_date'), '%Y-%m-%d') if request.form.get('hire_date') else None
+            staff.salary = float(request.form['salary']) if request.form.get('salary') else None
+            staff.bio = request.form.get('bio')
+            staff.is_active = 'is_active' in request.form
+            staff.updated_at = datetime.utcnow()
+            
+            db.session.commit()
+            flash('Staff member updated successfully!', 'success')
+            return redirect(url_for('staff.staff_list'))
+            
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error updating staff: {str(e)}")
+            flash(f'Error updating staff member: {str(e)}', 'danger')
+    
+    return render_template('staff/form.html', staff=staff)
+@staff_bp.route('/<int:staff_id>/delete', methods=['POST'])
+@login_required
+def delete_staff(staff_id):
+    staff = Staff.query.get_or_404(staff_id)
+    try:
+        # Delete the photo file if it exists
+        if staff.photo_url:
+            photo_path = os.path.join(current_app.root_path, 'static', staff.photo_url)
+            if os.path.exists(photo_path):
+                try:
+                    os.remove(photo_path)
+                except Exception as e:
+                    current_app.logger.error(f"Error deleting photo: {str(e)}")
+        
+        # Delete the staff record
+        db.session.delete(staff)
+        db.session.commit()
+        flash('Staff member deleted successfully!', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error deleting staff: {str(e)}")
+        flash('Error deleting staff member. Please try again.', 'danger')
+    
+    return redirect(url_for('staff.staff_list'))

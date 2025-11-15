@@ -1,0 +1,347 @@
+{% extends "fans/base.html" %}
+
+{% block fan_content %}
+<div class="row">
+    <!-- Main Content -->
+    <div class="col-lg-8">
+        <div class="card fan-card mb-4">
+            <div class="card-header">
+                <h3 class="h5 mb-0"><i class="fas fa-comments me-2 text-primary"></i>Fan Community Chat</h3>
+            </div>
+            <div class="card-body p-0">
+                <!-- Chat Messages -->
+                <div id="chat-messages" class="chat-messages p-3" style="height: 500px; overflow-y: auto;">
+                    <!-- Messages will be loaded here via JavaScript -->
+                    <div class="text-center text-muted py-5" id="loading-messages">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Loading chat...</p>
+                    </div>
+                </div>
+                
+                <!-- Message Input -->
+                <div class="chat-input p-3 border-top">
+                    {% if current_user.is_authenticated %}
+                        <form id="message-form" class="d-flex">
+                            <input type="text" id="message-input" class="form-control me-2" 
+                                   placeholder="Type your message..." autocomplete="off" required>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane"></i> Send
+                            </button>
+                        </form>
+                    {% else %}
+                        <div class="alert alert-info mb-0">
+                            <a href="{{ url_for('login') }}?next={{ request.path }}" class="btn btn-primary btn-sm">
+                                Log in to chat
+                            </a>
+                            <span class="ms-2">You need to be logged in to participate in the chat.</span>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Online Users -->
+        <div class="card fan-card">
+            <div class="card-header">
+                <h3 class="h5 mb-0"><i class="fas fa-users me-2 text-primary"></i>Online Now <span id="online-count" class="badge bg-primary">0</span></h3>
+            </div>
+            <div class="card-body">
+                <div id="online-users" class="d-flex flex-wrap gap-2">
+                    <!-- Online users will be added here via JavaScript -->
+                    <div class="text-muted">Loading online users...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sidebar -->
+    <div class="col-lg-4 mt-4 mt-lg-0">
+        <!-- Match Updates -->
+        <div class="card fan-card mb-4">
+            <div class="card-header">
+                <h3 class="h5 mb-0"><i class="fas fa-bell me-2 text-primary"></i>Live Match Updates</h3>
+            </div>
+            <div class="card-body p-0">
+                <div id="live-updates" class="p-3" style="max-height: 300px; overflow-y: auto;">
+                    <div class="text-center text-muted py-3">
+                        <i class="fas fa-futbol fa-2x mb-2"></i>
+                        <p>No live matches at the moment</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Poll -->
+        <div class="card fan-card">
+            <div class="card-header">
+                <h3 class="h5 mb-0"><i class="fas fa-poll me-2 text-primary"></i>Fan Poll</h3>
+            </div>
+            <div class="card-body">
+                <h5 class="h6">Who will win {{ team_settings.team_name }}'s next match?</h5>
+                <div class="mb-3">
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="fanPoll" id="option1" checked>
+                        <label class="form-check-label w-100" for="option1">
+                            <div class="d-flex justify-content-between">
+                                <span>{{ team_settings.team_name }}</span>
+                                <span class="text-muted">65%</span>
+                            </div>
+                            <div class="progress mt-1" style="height: 5px;">
+                                <div class="progress-bar bg-primary" role="progressbar" style="width: 65%;" aria-valuenow="65" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                        </label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="fanPoll" id="option2">
+                        <label class="form-check-label w-100" for="option2">
+                            <div class="d-flex justify-content-between">
+                                <span>Opponent</span>
+                                <span class="text-muted">35%</span>
+                            </div>
+                            <div class="progress mt-1" style="height: 5px;">
+                                <div class="progress-bar bg-secondary" role="progressbar" style="width: 35%;" aria-valuenow="35" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+                <button class="btn btn-primary btn-sm w-100">Vote</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Socket.IO connection
+        const socket = io();
+        
+        // Get DOM elements
+        const messageForm = document.getElementById('message-form');
+        const messageInput = document.getElementById('message-input');
+        const chatMessages = document.getElementById('chat-messages');
+        const onlineUsersList = document.getElementById('online-users');
+        const onlineCount = document.getElementById('online-count');
+        const loadingMessages = document.getElementById('loading-messages');
+        
+        // User data
+        const userData = {
+            id: '{{ current_user.id if current_user.is_authenticated else "" }}',
+            username: '{{ current_user.username if current_user.is_authenticated else "Guest" }}',
+            avatar: '{{ current_user.profile_picture if current_user.is_authenticated and current_user.profile_picture else url_for("static", filename="img/default-avatar.png") }}'
+        };
+        
+        // Connect to the socket
+        socket.on('connect', function() {
+            console.log('Connected to WebSocket server');
+            
+            // Join the fan community room
+            if (userData.id) {
+                socket.emit('user_join', {
+                    user_id: userData.id,
+                    username: userData.username
+                });
+            }
+            
+            // Load recent messages
+            fetch('{{ url_for("fans.get_chat_messages") }}')
+                .then(response => response.json())
+                .then(messages => {
+                    loadingMessages.style.display = 'none';
+                    messages.forEach(message => {
+                        appendMessage(message);
+                    });
+                    scrollToBottom();
+                });
+        });
+        
+        // Handle new message
+        if (messageForm) {
+            messageForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const message = messageInput.value.trim();
+                if (message) {
+                    // Emit the message to the server
+                    socket.emit('send_message', {
+                        user_id: userData.id,
+                        username: userData.username,
+                        message: message,
+                        avatar: userData.avatar
+                    });
+                    
+                    // Clear the input
+                    messageInput.value = '';
+                }
+            });
+        }
+        
+        // Handle received messages
+        socket.on('new_message', function(data) {
+            appendMessage(data);
+            scrollToBottom();
+        });
+        
+        // Handle user status updates
+        socket.on('user_status', function(data) {
+            updateOnlineUsers(data);
+        });
+        
+        // Handle match updates
+        socket.on('match_update', function(data) {
+            updateMatchStatus(data);
+        });
+        
+        // Function to append a message to the chat
+        function appendMessage(data) {
+            const messageElement = document.createElement('div');
+            messageElement.className = `mb-3 ${data.user_id === userData.id ? 'text-end' : ''}`;
+            
+            messageElement.innerHTML = `
+                <div class="d-flex ${data.user_id === userData.id ? 'flex-row-reverse' : ''} align-items-start">
+                    <img src="${data.avatar}" alt="${data.username}" 
+                         class="rounded-circle me-2" width="40" height="40" 
+                         onerror="this.src='{{ url_for('static', filename='img/default-avatar.png') }}'">
+                    <div class="message-bubble ${data.user_id === userData.id ? 'bg-primary text-white' : 'bg-light'}">
+                        <div class="message-header">
+                            <strong>${data.username}</strong>
+                            <small class="text-muted ms-2">${formatTimestamp(data.timestamp)}</small>
+                        </div>
+                        <div class="message-content">${escapeHtml(data.message)}</div>
+                    </div>
+                </div>
+            `;
+            
+            chatMessages.appendChild(messageElement);
+        }
+        
+        // Function to update online users list
+        function updateOnlineUsers(data) {
+            // This is a simplified version - in a real app, you'd want to track users properly
+            if (data.status === 'online') {
+                const userElement = document.createElement('span');
+                userElement.className = 'badge bg-primary me-1 mb-1';
+                userElement.textContent = data.username;
+                userElement.id = `user-${data.user_id}`;
+                onlineUsersList.appendChild(userElement);
+            } else if (data.status === 'offline') {
+                const userElement = document.getElementById(`user-${data.user_id}`);
+                if (userElement) {
+                    userElement.remove();
+                }
+            }
+            
+            // Update online count
+            const userCount = document.querySelectorAll('#online-users .badge').length;
+            onlineCount.textContent = userCount;
+        }
+        
+        // Function to update match status
+        function updateMatchStatus(data) {
+            const liveUpdates = document.getElementById('live-updates');
+            
+            // Clear existing content if it's the default message
+            if (liveUpdates.querySelector('.text-muted')) {
+                liveUpdates.innerHTML = '';
+            }
+            
+            const updateElement = document.createElement('div');
+            updateElement.className = 'mb-2';
+            updateElement.innerHTML = `
+                <div class="d-flex justify-content-between">
+                    <strong>${data.match}</strong>
+                    <small class="text-muted">${formatTimestamp(data.timestamp)}</small>
+                </div>
+                <div class="small">${data.event}</div>
+                <hr class="my-2">
+            `;
+            
+            liveUpdates.insertBefore(updateElement, liveUpdates.firstChild);
+            
+            // Keep only the last 10 updates
+            while (liveUpdates.children.length > 10) {
+                liveUpdates.removeChild(liveUpdates.lastChild);
+            }
+        }
+        
+        // Helper function to format timestamps
+        function formatTimestamp(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+        
+        // Helper function to escape HTML
+        function escapeHtml(unsafe) {
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+        
+        // Auto-scroll to bottom of chat
+        function scrollToBottom() {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        // Initial scroll to bottom
+        scrollToBottom();
+    });
+</script>
+{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<style>
+    .chat-messages {
+        background-color: #f8f9fa;
+        border-radius: 0.25rem 0.25rem 0 0;
+    }
+    
+    .message-bubble {
+        max-width: 70%;
+        padding: 0.5rem 1rem;
+        border-radius: 1rem;
+        margin-bottom: 0.5rem;
+        word-wrap: break-word;
+    }
+    
+    .message-bubble.bg-primary {
+        border-top-right-radius: 0.25rem;
+    }
+    
+    .message-bubble.bg-light {
+        border-top-left-radius: 0.25rem;
+        border: 1px solid #e9ecef;
+    }
+    
+    .message-header {
+        font-size: 0.75rem;
+        margin-bottom: 0.25rem;
+    }
+    
+    .message-content {
+        font-size: 0.9rem;
+    }
+    
+    #online-users {
+        min-height: 40px;
+    }
+    
+    #live-updates {
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    
+    .chat-input {
+        background-color: #f8f9fa;
+        border-top: 1px solid #e9ecef;
+    }
+</style>
+{% endblock %}

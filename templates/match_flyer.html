@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Match Flyer</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
+        
+        body {
+            font-family: 'Montserrat', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f8f9fa;
+            color: #333;
+        }
+        .flyer {
+            width: 800px;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: #1a237e;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 32px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .match-info {
+            padding: 30px;
+            text-align: center;
+        }
+        .teams {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 30px 0;
+        }
+        .team {
+            flex: 1;
+            text-align: center;
+            padding: 20px;
+        }
+        .team-logo {
+            width: 150px;
+            height: 150px;
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .team-logo img {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+        }
+        .vs {
+            font-size: 36px;
+            font-weight: bold;
+            margin: 0 20px;
+            color: #1a237e;
+        }
+        .team-name {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .match-details {
+            margin: 30px 0;
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        .detail-row {
+            display: flex;
+            margin: 10px 0;
+        }
+        .detail-label {
+            flex: 1;
+            text-align: right;
+            font-weight: bold;
+            padding-right: 20px;
+            color: #666;
+        }
+        .detail-value {
+            flex: 2;
+            text-align: left;
+        }
+        .footer {
+            background: #1a237e;
+            color: white;
+            text-align: center;
+            padding: 15px;
+            font-size: 14px;
+        }
+        .competition {
+            font-size: 20px;
+            color: #1a237e;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .date-time {
+            font-size: 18px;
+            color: #666;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="flyer">
+        <div class="header">
+            <h1>Match Day</h1>
+        </div>
+        
+        <div class="match-info">
+            <div class="competition">{{ match.competition or 'Friendly Match' }}</div>
+            <div class="date-time">{{ match.match_date.strftime('%A, %B %d, %Y') }} at {{ match.match_date.strftime('%I:%M %p') }}</div>
+            
+            <div class="teams">
+                <div class="team">
+                    <div class="team-logo">
+                        <img src="{{ home_team_logo }}" alt="{{ home_team_name }}">
+                    </div>
+                    <div class="team-name">{{ home_team_name }}</div>
+                </div>
+                
+                <div class="vs">VS</div>
+                
+                <div class="team">
+                    <div class="team-logo">
+                        {% if match.opponent_logo %}
+                            <img src="{{ opponent_logo }}" alt="{{ match.opponent }}">
+                        {% else %}
+                            <div style="font-size: 24px; color: #666;">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="team-name">{{ match.opponent }}</div>
+                </div>
+            </div>
+            
+            <div class="match-details">
+                <div class="detail-row">
+                    <div class="detail-label">Venue:</div>
+                    <div class="detail-value">
+                        {% if match.venue == 'home' %}
+                            Home Stadium
+                        {% else %}
+                            {{ match.opponent }} Stadium
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Match Status:</div>
+                    <div class="detail-value">{{ match.status|title }}</div>
+                </div>
+                {% if match.status == 'completed' %}
+                <div class="detail-row">
+                    <div class="detail-label">Final Score:</div>
+                    <div class="detail-value">
+                        <strong>{{ match.home_goals }} - {{ match.away_goals }}</strong>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="footer">
+            {{ team_settings.team_name if team_settings else 'Football Club' }} &copy; {{ now.year }}
+        </div>
+    </div>
+</body>
+</html>

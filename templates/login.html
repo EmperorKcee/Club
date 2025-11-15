@@ -1,0 +1,392 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Football Club Management{% endblock %}
+
+
+
+{% block extra_css %}
+<style>
+    .auth-container {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #0d6efd 0%, #0d6efd 50%, #ffffff 50%, #ffffff 100%);
+    }
+    .auth-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        transition: transform 0.3s ease;
+    }
+    .auth-card:hover {
+        transform: translateY(-5px);
+    }
+    .auth-header {
+        background: linear-gradient(45deg, #0d6efd, #0a58ca);
+        color: white;
+        padding: 2rem;
+        text-align: center;
+    }
+    .auth-logo {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+    }
+    .auth-body {
+        padding: 2.5rem;
+        background: white;
+    }
+    .form-control {
+        border-radius: 8px;
+        padding: 12px 15px;
+        border: 1px solid #e0e0e0;
+        transition: all 0.3s;
+    }
+    .form-control:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+    }
+    .btn-login {
+        background: linear-gradient(45deg, #0d6efd, #0a58ca);
+        border: none;
+        padding: 12px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        border-radius: 8px;
+        transition: all 0.3s;
+    }
+    .btn-login:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(13, 110, 253, 0.3);
+    }
+
+    .input-group-text {
+        background: transparent;
+        border-left: none;
+    }
+    .input-group .form-control:not(:first-child) {
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+    }
+    .input-group .form-control:not(:last-child) {
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+    
+    /* Hide footer on login page */
+    footer {
+        display: none !important;
+    }
+    
+    /* Password toggle button styling */
+    .toggle-password {
+        border-left: none !important;
+        background: transparent !important;
+        color: #6c757d;
+        transition: color 0.3s ease;
+    }
+    
+    .toggle-password:hover {
+        color: #0d6efd !important;
+        background: transparent !important;
+        border-color: #e0e0e0 !important;
+    }
+    
+    .toggle-password:focus {
+        box-shadow: none !important;
+        border-color: #e0e0e0 !important;
+    }
+    
+    .toggle-password:active {
+        background: transparent !important;
+        border-color: #e0e0e0 !important;
+    }
+    
+    /* Ensure input group styling is consistent */
+    .input-group .toggle-password {
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+        border-top-right-radius: 8px;
+        border-bottom-right-radius: 8px;
+    }
+    
+    /* User type cards styling */
+    .card {
+        transition: all 0.3s ease;
+    }
+    
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Alert styling */
+    .alert-info {
+        background-color: rgba(13, 110, 253, 0.1);
+        border-color: rgba(13, 110, 253, 0.2);
+        color: #0a58ca;
+    }
+    
+    /* Accordion styling */
+    .accordion-button {
+        font-size: 0.9rem;
+        padding: 0.75rem 1rem;
+    }
+    
+    .accordion-button:not(.collapsed) {
+        background-color: rgba(13, 110, 253, 0.1);
+        color: #0a58ca;
+    }
+    
+    .accordion-body {
+        padding: 1rem;
+        font-size: 0.9rem;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .auth-body {
+            padding: 1.5rem;
+        }
+        
+        .card-body {
+            padding: 0.75rem !important;
+        }
+        
+        .accordion-body {
+            padding: 0.75rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid auth-container d-flex align-items-center">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-5">
+                <div class="auth-card">
+                    <div class="auth-header">
+                        <div class="auth-logo">
+                            <img src="{{ url_for('static', filename=team_settings.logo_url) }}" 
+                                 alt="{{ team_settings.team_name }}" 
+                                 class="logo-img"
+                                 onerror="this.onerror=null; this.parentElement.innerHTML='<i class=\'fas fa-futbol fa-2x\'></i>'">
+                        </div>
+                        <h2 class="mb-0">{{ team_settings.team_name }}</h2>
+                        <p class="mb-0">Management & Player Portal</p>
+                    </div>
+                    <div class="auth-body">
+                        <form method="POST" action="{{ url_for('login') }}" class="needs-validation" novalidate>
+                            {{ form.hidden_tag() }}
+                            <div class="mb-4">
+                                <label for="username" class="form-label fw-bold">Username</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                    {{ form.username(class="form-control", id="username", required=true) }}
+                                </div>
+                            </div>
+                            <div class="mb-4">
+                                <label for="password" class="form-label fw-bold">Password</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                    {{ form.password(class="form-control", id="password", required=true) }}
+                                    <button class="btn btn-outline-secondary toggle-password" type="button" id="togglePasswordBtn">
+                                        <i class="fas fa-eye" id="togglePasswordIcon"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="d-grid gap-2">
+                                <div class="d-grid gap-2">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-sign-in-alt me-2"></i> Login
+                                    </button>
+                                    <div class="text-center mt-2">
+                                        <a href="{{ url_for('request_reset') }}" class="text-decoration-none">
+                                            <small>Forgot Password?</small>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                        
+                        <!-- User Type Information -->
+                        <div class="mt-4">
+                            <div class="row g-3">
+                                <div class="col-6">
+                                    <div class="card border-primary" style="border-width: 2px;">
+                                        <div class="card-body text-center p-3">
+                                            <i class="fas fa-user-tie text-primary mb-2" style="font-size: 1.5rem;"></i>
+                                            <h6 class="card-title mb-1">Staff Login</h6>
+                                            <small class="text-muted">Admin & Management</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="card border-success" style="border-width: 2px;">
+                                        <div class="card-body text-center p-3">
+                                            <i class="fas fa-running text-success mb-2" style="font-size: 1.5rem;"></i>
+                                            <h6 class="card-title mb-1">Player Login</h6>
+                                            <small class="text-muted">Player Portal</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="alert alert-info mt-3 mb-0" role="alert">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Auto-Detection:</strong> Enter your credentials and the system will automatically redirect you to the appropriate dashboard.
+                            </div>
+                            
+                            <!-- Help Section -->
+                            <div class="mt-3">
+                                <div class="accordion" id="helpAccordion">
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#helpCollapse" aria-expanded="false">
+                                                <i class="fas fa-question-circle me-2"></i>Need Help?
+                                            </button>
+                                        </h2>
+                                        <div id="helpCollapse" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                                            <div class="accordion-body">
+                                                <div class="row g-3">
+                                                    <div class="col-md-6">
+                                                        <h6 class="text-primary">
+                                                            <i class="fas fa-user-tie me-1"></i>Staff Members
+                                                        </h6>
+                                                        <ul class="list-unstyled small">
+                                                            <li>• Use your admin credentials</li>
+                                                            <li>• Access management tools</li>
+                                                            <li>• Manage players & finances</li>
+                                                        </ul>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <h6 class="text-success">
+                                                            <i class="fas fa-running me-1"></i>Players
+                                                        </h6>
+                                                        <ul class="list-unstyled small">
+                                                            <li>• Use credentials from admin</li>
+                                                            <li>• View personal stats</li>
+                                                            <li>• Check training schedule</li>
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                                <div class="text-center mt-3">
+                                                    <small class="text-muted">
+                                                        <i class="fas fa-shield-alt me-1"></i>
+                                                        Forgot your password? Contact your administrator.
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Toggle password visibility
+        const togglePasswordBtn = document.getElementById('togglePasswordBtn');
+        const passwordInput = document.getElementById('password');
+        const togglePasswordIcon = document.getElementById('togglePasswordIcon');
+        
+        if (togglePasswordBtn && passwordInput && togglePasswordIcon) {
+            togglePasswordBtn.addEventListener('click', function(e) {
+                e.preventDefault(); // Prevent form submission
+                
+                if (passwordInput.type === 'password') {
+                    // Show password
+                    passwordInput.type = 'text';
+                    togglePasswordIcon.classList.remove('fa-eye');
+                    togglePasswordIcon.classList.add('fa-eye-slash');
+                    togglePasswordBtn.title = 'Hide password';
+                } else {
+                    // Hide password
+                    passwordInput.type = 'password';
+                    togglePasswordIcon.classList.remove('fa-eye-slash');
+                    togglePasswordIcon.classList.add('fa-eye');
+                    togglePasswordBtn.title = 'Show password';
+                }
+            });
+            
+            // Set initial title
+            togglePasswordBtn.title = 'Show password';
+        }
+
+        // Form validation
+        const form = document.querySelector('form');
+        if (form) {
+            form.addEventListener('submit', function(event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        }
+
+        // Add shake animation on invalid form submission
+        const inputs = document.querySelectorAll('.form-control');
+        inputs.forEach(input => {
+            input.addEventListener('invalid', function() {
+                this.classList.add('is-invalid');
+                this.parentElement.classList.add('shake-animation');
+                setTimeout(() => {
+                    this.parentElement.classList.remove('shake-animation');
+                }, 500);
+            });
+
+            // Clear invalid state on input
+            input.addEventListener('input', function() {
+                if (this.checkValidity()) {
+                    this.classList.remove('is-invalid');
+                }
+            });
+        });
+        
+        // Add visual feedback for user type cards
+        const userTypeCards = document.querySelectorAll('.card');
+        userTypeCards.forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-2px)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+            });
+        });
+        
+        // Auto-focus username field
+        const usernameInput = document.getElementById('username');
+        if (usernameInput) {
+            usernameInput.focus();
+        }
+        
+        // Add loading state to login button
+        const loginForm = document.querySelector('form');
+        const loginButton = document.querySelector('.btn-login');
+        
+        if (loginForm && loginButton) {
+            loginForm.addEventListener('submit', function() {
+                loginButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Signing In...';
+                loginButton.disabled = true;
+            });
+        }
+    });
+</script>
+{% endblock %}

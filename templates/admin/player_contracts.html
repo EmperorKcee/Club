@@ -1,0 +1,479 @@
+{% extends "base.html" %}
+
+{% block title %}Player Contracts - Admin{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Player Contract Management</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{{ url_for('players') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-users me-1"></i> Manage Players
+            </a>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary">
+                <i class="fas fa-tachometer-alt me-1"></i> Dashboard
+            </a>
+        </div>
+        
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Contract Statistics -->
+<div class="row mb-4">
+    <div class="col-md-2">
+        <div class="card bg-danger text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="mb-0">{{ expired_contracts|length }}</h4>
+                        <p class="mb-0 small">Expired</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-exclamation-circle fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="mb-0">{{ expiring_soon|length }}</h4>
+                        <p class="mb-0 small">≤ 30 Days</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-clock fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="mb-0">{{ expiring_3_months|length }}</h4>
+                        <p class="mb-0 small">≤ 3 Months</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-calendar-alt fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="mb-0">{{ expiring_6_months|length }}</h4>
+                        <p class="mb-0 small">≤ 6 Months</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-calendar-check fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="mb-0">{{ active_contracts|length }}</h4>
+                        <p class="mb-0 small">Active</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-check-circle fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card bg-secondary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="mb-0">{{ no_contract|length }}</h4>
+                        <p class="mb-0 small">No Contract</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-question-circle fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filter and Search -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label for="contractSearch" class="form-label">Search Players</label>
+                <div class="input-group">
+                    <input type="text" class="form-control" id="contractSearch" placeholder="Search by name or position..." onkeyup="filterContracts()">
+                    <button class="btn btn-outline-secondary" type="button">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <label for="contractStatusFilter" class="form-label">Contract Status</label>
+                <select class="form-select" id="contractStatusFilter" onchange="filterContracts()">
+                    <option value="">All Contracts</option>
+                    <option value="expired">Expired</option>
+                    <option value="expiring-soon">Expiring Soon (≤30 days)</option>
+                    <option value="expiring-3-months">Expiring (≤3 months)</option>
+                    <option value="expiring-6-months">Expiring (≤6 months)</option>
+                    <option value="active">Active</option>
+                    <option value="no-contract">No Contract</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="positionFilter" class="form-label">Position</label>
+                <select class="form-select" id="positionFilter" onchange="filterContracts()">
+                    <option value="">All Positions</option>
+                    <option value="GK">Goalkeeper</option>
+                    <option value="DF">Defender</option>
+                    <option value="MF">Midfielder</option>
+                    <option value="FW">Forward</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="button" class="btn btn-outline-secondary w-100" onclick="resetContractFilters()">
+                    <i class="fas fa-sync-alt me-1"></i> Reset
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Contract Sections -->
+{% if expired_contracts %}
+<div class="card mb-4 contract-section" data-status="expired">
+    <div class="card-header bg-danger text-white">
+        <h5 class="mb-0">
+            <i class="fas fa-exclamation-circle me-2"></i>Expired Contracts ({{ expired_contracts|length }})
+        </h5>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Player</th>
+                    <th>Position</th>
+                    <th>Contract End</th>
+                    <th>Days Overdue</th>
+                    <th>Salary</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for player in expired_contracts %}
+                <tr class="contract-row" 
+                    data-name="{{ player.full_name.lower() }}"
+                    data-position="{{ player.position }}"
+                    data-status="expired">
+                    <td>
+                        <div class="d-flex align-items-center">
+                            {% if player.photo_url %}
+                            <img src="{{ url_for('static', filename=player.photo_url) }}" alt="{{ player.full_name }}" class="rounded-circle me-2" width="40" height="40" style="object-fit: cover;">
+                            {% else %}
+                            <div class="bg-light rounded-circle me-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                <i class="fas fa-user text-muted"></i>
+                            </div>
+                            {% endif %}
+                            <div>
+                                <h6 class="mb-0">{{ player.full_name }}</h6>
+                                <small class="text-muted">#{{ player.jersey_number }}</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td><span class="badge bg-info">{{ player.position }}</span></td>
+                    <td>{{ player.contract_end.strftime('%d %b %Y') if player.contract_end else 'N/A' }}</td>
+                    <td>
+                        <span class="badge bg-danger">{{ abs(player.contract_days_remaining) }} days</span>
+                    </td>
+                    <td>{{ "${:,.0f}".format(player.salary) if player.salary else 'N/A' }}</td>
+                    <td>
+                        <div class="btn-group btn-group-sm">
+                            <a href="{{ url_for('edit_player', player_id=player.id) }}" class="btn btn-outline-primary" title="Edit Player">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <button type="button" class="btn btn-outline-success" onclick="renewContract({{ player.id }})" title="Renew Contract">
+                                <i class="fas fa-redo"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+{% if expiring_soon %}
+<div class="card mb-4 contract-section" data-status="expiring-soon">
+    <div class="card-header bg-warning text-dark">
+        <h5 class="mb-0">
+            <i class="fas fa-clock me-2"></i>Expiring Soon - Within 30 Days ({{ expiring_soon|length }})
+        </h5>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Player</th>
+                    <th>Position</th>
+                    <th>Contract End</th>
+                    <th>Days Remaining</th>
+                    <th>Salary</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for player in expiring_soon %}
+                <tr class="contract-row" 
+                    data-name="{{ player.full_name.lower() }}"
+                    data-position="{{ player.position }}"
+                    data-status="expiring-soon">
+                    <td>
+                        <div class="d-flex align-items-center">
+                            {% if player.photo_url %}
+                            <img src="{{ url_for('static', filename=player.photo_url) }}" alt="{{ player.full_name }}" class="rounded-circle me-2" width="40" height="40" style="object-fit: cover;">
+                            {% else %}
+                            <div class="bg-light rounded-circle me-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                <i class="fas fa-user text-muted"></i>
+                            </div>
+                            {% endif %}
+                            <div>
+                                <h6 class="mb-0">{{ player.full_name }}</h6>
+                                <small class="text-muted">#{{ player.jersey_number }}</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td><span class="badge bg-info">{{ player.position }}</span></td>
+                    <td>{{ player.contract_end.strftime('%d %b %Y') if player.contract_end else 'N/A' }}</td>
+                    <td>
+                        <span class="badge bg-warning text-dark">{{ player.contract_days_remaining }} days</span>
+                    </td>
+                    <td>{{ "${:,.0f}".format(player.salary) if player.salary else 'N/A' }}</td>
+                    <td>
+                        <div class="btn-group btn-group-sm">
+                            <a href="{{ url_for('edit_player', player_id=player.id) }}" class="btn btn-outline-primary" title="Edit Player">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <button type="button" class="btn btn-outline-success" onclick="renewContract({{ player.id }})" title="Renew Contract">
+                                <i class="fas fa-redo"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<!-- Other contract sections (3 months, 6 months, active, no contract) -->
+{% for section_data in [
+    (expiring_3_months, 'expiring-3-months', 'bg-info', 'Expiring Within 3 Months'),
+    (expiring_6_months, 'expiring-6-months', 'bg-primary', 'Expiring Within 6 Months'),
+    (active_contracts, 'active', 'bg-success', 'Active Contracts'),
+    (no_contract, 'no-contract', 'bg-secondary', 'No Contract Set')
+] %}
+{% set players_list, status_class, bg_class, title = section_data %}
+{% if players_list %}
+<div class="card mb-4 contract-section" data-status="{{ status_class }}">
+    <div class="card-header {{ bg_class }} text-white">
+        <h5 class="mb-0">
+            <i class="fas fa-calendar-check me-2"></i>{{ title }} ({{ players_list|length }})
+        </h5>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Player</th>
+                    <th>Position</th>
+                    <th>Contract End</th>
+                    <th>Status</th>
+                    <th>Salary</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for player in players_list %}
+                <tr class="contract-row" 
+                    data-name="{{ player.full_name.lower() }}"
+                    data-position="{{ player.position }}"
+                    data-status="{{ status_class }}">
+                    <td>
+                        <div class="d-flex align-items-center">
+                            {% if player.photo_url %}
+                            <img src="{{ url_for('static', filename=player.photo_url) }}" alt="{{ player.full_name }}" class="rounded-circle me-2" width="40" height="40" style="object-fit: cover;">
+                            {% else %}
+                            <div class="bg-light rounded-circle me-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                <i class="fas fa-user text-muted"></i>
+                            </div>
+                            {% endif %}
+                            <div>
+                                <h6 class="mb-0">{{ player.full_name }}</h6>
+                                <small class="text-muted">#{{ player.jersey_number }}</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td><span class="badge bg-info">{{ player.position }}</span></td>
+                    <td>{{ player.contract_end.strftime('%d %b %Y') if player.contract_end else 'Not Set' }}</td>
+                    <td>
+                        {% if status_class == 'no-contract' %}
+                            <span class="badge bg-secondary">No Contract</span>
+                        {% elif status_class == 'active' %}
+                            <span class="badge bg-success">{{ player.contract_days_remaining }} days</span>
+                        {% else %}
+                            <span class="badge bg-primary">{{ player.contract_days_remaining }} days</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ "${:,.0f}".format(player.salary) if player.salary else 'N/A' }}</td>
+                    <td>
+                        <div class="btn-group btn-group-sm">
+                            <a href="{{ url_for('edit_player', player_id=player.id) }}" class="btn btn-outline-primary" title="Edit Player">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            {% if status_class != 'no-contract' %}
+                            <button type="button" class="btn btn-outline-success" onclick="renewContract({{ player.id }})" title="Renew Contract">
+                                <i class="fas fa-redo"></i>
+                            </button>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+{% endfor %}
+
+{% if not (expired_contracts or expiring_soon or expiring_3_months or expiring_6_months or active_contracts or no_contract) %}
+<div class="card">
+    <div class="card-body text-center py-5">
+        <i class="fas fa-file-contract fa-4x text-muted mb-3"></i>
+        <h4>No Players Found</h4>
+        <p class="text-muted">Add players to the system to manage their contracts.</p>
+        <a href="{{ url_for('add_player') }}" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i> Add Player
+        </a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Filter contracts function
+function filterContracts() {
+    const searchTerm = document.getElementById('contractSearch').value.toLowerCase();
+    const statusFilter = document.getElementById('contractStatusFilter').value;
+    const positionFilter = document.getElementById('positionFilter').value;
+    
+    const rows = document.querySelectorAll('.contract-row');
+    const sections = document.querySelectorAll('.contract-section');
+    
+    // Hide all sections first
+    sections.forEach(section => {
+        section.style.display = 'none';
+    });
+    
+    let visibleSections = new Set();
+    
+    rows.forEach(row => {
+        const playerName = row.dataset.name;
+        const position = row.dataset.position;
+        const status = row.dataset.status;
+        
+        // Search filter
+        const matchesSearch = !searchTerm || playerName.includes(searchTerm);
+        
+        // Status filter
+        const matchesStatus = !statusFilter || status === statusFilter;
+        
+        // Position filter
+        const matchesPosition = !positionFilter || position === positionFilter;
+        
+        if (matchesSearch && matchesStatus && matchesPosition) {
+            row.style.display = '';
+            // Show the parent section
+            const section = row.closest('.contract-section');
+            if (section) {
+                visibleSections.add(section);
+            }
+        } else {
+            row.style.display = 'none';
+        }
+    });
+    
+    // Show sections that have visible rows
+    visibleSections.forEach(section => {
+        section.style.display = 'block';
+    });
+}
+
+// Reset filters
+function resetContractFilters() {
+    document.getElementById('contractSearch').value = '';
+    document.getElementById('contractStatusFilter').value = '';
+    document.getElementById('positionFilter').value = '';
+    filterContracts();
+}
+
+// Renew contract function
+function renewContract(playerId) {
+    if (confirm('Redirect to edit player page to update contract details?')) {
+        window.location.href = `/players/${playerId}/edit`;
+    }
+}
+
+// Export functions
+function exportContractReport() {
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '{{ url_for("export_contract_report") }}';
+    document.body.appendChild(form);
+    form.submit();
+}
+
+function exportExpiringContracts() {
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '{{ url_for("export_expiring_contracts") }}';
+    document.body.appendChild(form);
+    form.submit();
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Set up search input event
+    document.getElementById('contractSearch').addEventListener('keyup', filterContracts);
+    
+    // Add tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+    const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+{% endblock %}

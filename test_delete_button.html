@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Delete Button</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h2>Test Delete Button Functionality</h2>
+        
+        <!-- Test Button -->
+        <button type="button" 
+                class="btn btn-outline-danger btn-sm delete-player" 
+                data-id="123">
+            <i class="fas fa-trash"></i> Test Delete
+        </button>
+        
+        <!-- Modal -->
+        <div class="modal fade" id="deletePlayerModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Confirm Deletion</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        Are you sure you want to delete this player?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <form id="deletePlayerForm" method="POST" action="">
+                            <button type="submit" class="btn btn-danger">Delete Player</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, setting up delete handlers...');
+            
+            // Handle player deletion
+            document.querySelectorAll('.delete-player').forEach(button => {
+                console.log('Found delete button:', button);
+                button.addEventListener('click', function() {
+                    console.log('Delete button clicked!');
+                    const playerId = this.getAttribute('data-id');
+                    console.log('Player ID:', playerId);
+                    
+                    const form = document.getElementById('deletePlayerForm');
+                    if (form) {
+                        form.action = `/players/${playerId}/delete`;
+                        console.log('Form action set to:', form.action);
+                        
+                        const modal = new bootstrap.Modal(document.getElementById('deletePlayerModal'));
+                        modal.show();
+                        console.log('Modal shown');
+                    } else {
+                        console.error('Delete form not found!');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

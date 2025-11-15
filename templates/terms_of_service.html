@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}Terms of Service - {{ team_settings.team_name if team_settings else 'Football Club' }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-dark text-white py-3">
+                    <h1 class="h3 mb-1">Terms of Service</h1>
+                    <p class="text-light mb-0">Last updated: {{ now.strftime('%B %d, %Y') }}</p>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info mb-4">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Please read these Terms of Service carefully before using our website. Your access to and use of the service is conditioned on your acceptance of and compliance with these Terms.
+                    </div>
+
+                    <div class="mb-5">
+                        <h2 class="h4 mb-3 text-dark border-bottom pb-2">1. Introduction</h2>
+                        <p>Welcome to {{ team_settings.team_name if team_settings else 'Our Football Club' }} ("Club", "we", "our", or "us"). These Terms of Service ("Terms") govern your access to and use of our website, mobile applications, and services (collectively, the "Service").</p>
+                        <p>By accessing or using the Service, you agree to be bound by these Terms. If you disagree with any part of the terms, you may not access the Service.</p>
+                    </div>
+
+                    <div class="mb-5">
+                        <h2 class="h4 mb-3 text-dark border-bottom pb-2">2. Account Registration</h2>
+                        <p>To access certain features of the Service, you may be required to create an account. When creating an account, you agree to:</p>
+                        <ul class="list-group list-group-flush mb-3">
+                            <li class="list-group-item bg-transparent">Provide accurate, current, and complete information</li>
+                            <li class="list-group-item bg-transparent">Maintain the security of your password and accept all risks of unauthorized access</li>
+                            <li class="list-group-item bg-transparent">Immediately notify us of any unauthorized use of your account</li>
+                        </ul>
+                        <p>You must be at least 13 years old to use our Service. By using the Service, you represent that you are at least 13 years of age.</p>
+                    </div>
+
+                    <div class="mb-5">
+                        <h2 class="h4 mb-3 text-dark border-bottom pb-2">3. User Conduct</h2>
+                        <p>You agree not to engage in any of the following prohibited activities:</p>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <ul class="list-unstyled">
+                                    <li class="mb-2"><i class="fas fa-times-circle text-danger me-2"></i> Violating laws or regulations</li>
+                                    <li class="mb-2"><i class="fas fa-times-circle text-danger me-2"></i> Infringing intellectual property rights</li>
+                                    <li class="mb-2"><i class="fas fa-times-circle text-danger me-2"></i> Harassing or threatening others</li>
+                                    <li class="mb-2"><i class="fas fa-times-circle text-danger me-2"></i> Uploading malicious code or viruses</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <ul class="list-unstyled">
+                                    <li class="mb-2"><i class="fas fa-times-circle text-danger me-2"></i> Collecting user data without consent</li>
+                                    <li class="mb-2"><i class="fas fa-times-circle text-danger me-2"></i> Impersonating others</li>
+                                    <li class="mb-2"><i class="fas fa-times-circle text-danger me-2"></i> Interfering with the Service</li>
+                                    <li class="mb-2"><i class="fas fa-times-circle text-danger me-2"></i> Attempting to bypass security measures</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-5">
+                        <h2 class="h4 mb-3 text-dark border-bottom pb-2">4. Intellectual Property</h2>
+                        <p>The Service and its original content, features, and functionality are owned by {{ team_settings.team_name if team_settings else 'Our Football Club' }} and are protected by international copyright, trademark, and other intellectual property laws.</p>
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Unauthorized use of our trademarks, logos, and brand elements is strictly prohibited without prior written permission.
+                        </div>
+                    </div>
+
+                    <div class="mb-5">
+                        <h2 class="h4 mb-3 text-dark border-bottom pb-2">5. Purchases and Payments</h2>
+                        <p>If you wish to purchase any product or service made available through the Service ("Purchase"), you may be asked to supply certain information relevant to your Purchase including, without limitation, your credit card number, the expiration date of your credit card, and your billing address.</p>
+                        <p>You represent and warrant that: (i) you have the legal right to use any credit card(s) or other payment method(s) in connection with any Purchase; and that (ii) the information you supply to us is true, correct and complete.</p>
+                    </div>
+
+                    <div class="mb-5">
+                        <h2 class="h4 mb-3 text-dark border-bottom pb-2">6. Termination</h2>
+                        <p>We may terminate or suspend your account immediately, without prior notice or liability, for any reason whatsoever, including without limitation if you breach these Terms.</p>
+                        <p>Upon termination, your right to use the Service will immediately cease. All provisions of the Terms which by their nature should survive termination shall survive termination, including, without limitation, ownership provisions, warranty disclaimers, indemnity, and limitations of liability.</p>
+                    </div>
+
+                    <div class="mb-5">
+                        <h2 class="h4 mb-3 text-dark border-bottom pb-2">7. Limitation of Liability</h2>
+                        <p>In no event shall {{ team_settings.team_name if team_settings else 'Our Football Club' }}, nor its directors, employees, partners, agents, suppliers, or affiliates, be liable for any indirect, incidental, special, consequential or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from:</p>
+                        <ul class="list-group list-group-flush mb-3">
+                            <li class="list-group-item bg-transparent">Your access to or use of or inability to access or use the Service</li>
+                            <li class="list-group-item bg-transparent">Any conduct or content of any third party on the Service</li>
+                            <li class="list-group-item bg-transparent">Any content obtained from the Service</li>
+                            <li class="list-group-item bg-transparent">Unauthorized access, use, or alteration of your transmissions or content</li>
+                        </ul>
+                    </div>
+
+                    <div class="mb-5">
+                        <h2 class="h4 mb-3 text-dark border-bottom pb-2">8. Changes to Terms</h2>
+                        <p>We reserve the right, at our sole discretion, to modify or replace these Terms at any time. We will provide at least 30 days' notice before any new terms take effect. What constitutes a material change will be determined at our sole discretion.</p>
+                        <p>By continuing to access or use our Service after those revisions become effective, you agree to be bound by the revised terms. If you do not agree to the new terms, you must stop using the Service.</p>
+                    </div>
+
+                    <div class="mb-4">
+                        <h2 class="h4 mb-3 text-dark border-bottom pb-2">9. Governing Law</h2>
+                        <p>These Terms shall be governed and construed in accordance with the laws of Zambia, without regard to its conflict of law provisions.</p>
+                        <p>Our failure to enforce any right or provision of these Terms will not be considered a waiver of those rights. If any provision of these Terms is held to be invalid or unenforceable by a court, the remaining provisions of these Terms will remain in effect.</p>
+                    </div>
+
+                    <div class="card bg-light mt-5">
+                        <div class="card-body">
+                            <h2 class="h4 mb-3 text-dark">Contact Us</h2>
+                            <p>If you have any questions about these Terms, please contact us:</p>
+                            <address class="mb-0">
+                                <strong>{{ team_settings.team_name if team_settings else 'Our Football Club' }}</strong><br>
+                                {% if team_settings and team_settings.address %}
+                                    <i class="fas fa-map-marker-alt me-2"></i> {{ team_settings.address }}<br>
+                                {% endif %}
+                                {% if team_settings and team_settings.contact_email %}
+                                    <i class="fas fa-envelope me-2"></i> <a href="mailto:{{ team_settings.contact_email }}" class="text-decoration-none">{{ team_settings.contact_email }}</a><br>
+                                {% endif %}
+                                {% if team_settings and team_settings.contact_phone %}
+                                    <i class="fas fa-phone me-2"></i> {{ team_settings.contact_phone }}
+                                {% endif %}
+                            </address>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        border-radius: 10px;
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1) !important;
+    }
+    .card-header {
+        background: linear-gradient(135deg, #141212 0%, #060606 100%);
+        border-bottom: none;
+    }
+    h2 {
+        color: #333;
+        font-weight: 600;
+    }
+    .list-group-item {
+        padding-left: 0;
+        border-left: none;
+        border-right: none;
+    }
+    .alert {
+        border-left: 4px solid #0d6efd;
+        border-radius: 4px;
+    }
+</style>
+{% endblock %}

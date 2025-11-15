@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Player Portal - {{ team_settings.team_name }}{% endblock %}</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        /* Dark mode styles */
+        [data-bs-theme="dark"] {
+            color-scheme: dark;
+            --bs-body-color: #e9ecef;
+            --bs-body-bg: #1a1d20;
+            --bs-secondary-bg: #2b3035;
+            --bs-tertiary-bg: #343a40;
+            --bs-card-bg: #2a2e32;
+            --bs-border-color: #3e444a;
+            --bs-heading-color: #f8f9fa;
+            --bs-link-color: #6ea8fe;
+            --bs-link-hover-color: #8bb9ff;
+        }
+        
+        /* Base elements */
+        [data-bs-theme="dark"] body {
+            background-color: var(--bs-body-bg);
+            color: var(--bs-body-color);
+        }
+        
+        /* Cards, modals, dropdowns */
+        [data-bs-theme="dark"] .card,
+        [data-bs-theme="dark"] .modal-content,
+        [data-bs-theme="dark"] .dropdown-menu,
+        [data-bs-theme="dark"] .list-group-item {
+            background-color: var(--bs-card-bg);
+            border-color: var(--bs-border-color);
+            color: var(--bs-body-color);
+        }
+        
+        /* Headers */
+        [data-bs-theme="dark"] h1,
+        [data-bs-theme="dark"] h2,
+        [data-bs-theme="dark"] h3,
+        [data-bs-theme="dark"] h4,
+        [data-bs-theme="dark"] h5,
+        [data-bs-theme="dark"] h6,
+        [data-bs-theme="dark"] .card-title,
+        [data-bs-theme="dark"] .modal-title {
+            color: var(--bs-heading-color);
+        }
+        
+        /* Text colors */
+        [data-bs-theme="dark"] .text-muted {
+            color: #adb5bd !important;
+        }
+        
+        [data-bs-theme="dark"] .text-body {
+            color: var(--bs-body-color) !important;
+        }
+        
+        /* Links */
+        [data-bs-theme="dark"] a {
+            color: var(--bs-link-color);
+        }
+        
+        [data-bs-theme="dark"] a:hover {
+            color: var(--bs-link-hover-color);
+        }
+        
+        /* Tables */
+        [data-bs-theme="dark"] .table {
+            --bs-table-color: var(--bs-body-color);
+            --bs-table-bg: transparent;
+            --bs-table-border-color: var(--bs-border-color);
+            --bs-table-striped-bg: rgba(0, 0, 0, 0.05);
+            --bs-table-hover-bg: rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Form controls */
+        [data-bs-theme="dark"] .form-control,
+        [data-bs-theme="dark"] .form-select {
+            background-color: var(--bs-secondary-bg);
+            border-color: var(--bs-border-color);
+            color: var(--bs-body-color);
+        }
+        
+        [data-bs-theme="dark"] .form-control:focus,
+        [data-bs-theme="dark"] .form-select:focus {
+            background-color: var(--bs-secondary-bg);
+            color: var(--bs-body-color);
+            border-color: var(--bs-primary);
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+        
+        /* Custom player hero */
+        [data-bs-theme="dark"] .player-hero {
+            background: linear-gradient(135deg, #1a2a6c 0%, #1a2a6c 100%) !important;
+        }
+        
+        .navbar-brand img {
+            height: 40px;
+        }
+        .sidebar {
+            min-height: calc(100vh - 56px);
+            background: linear-gradient(135deg, {{ team_settings.primary_color }} 0%, #764ba2 100%);
+        }
+        .sidebar .nav-link {
+            color: rgba(255,255,255,0.8);
+            border-radius: 8px;
+            margin: 2px 0;
+            transition: all 0.3s ease;
+        }
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            color: white;
+            background: rgba(255,255,255,0.2);
+            transform: translateX(5px);
+        }
+        .main-content {
+            background: #f8f9fa;
+            min-height: calc(100vh - 56px);
+        }
+        .player-avatar {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center" href="{{ url_for('player_dashboard') }}">
+                <img src="{{ url_for('static', filename=team_settings.logo_url) }}" alt="{{ team_settings.team_name }}" class="me-2">
+                <span class="fw-bold">{{ team_settings.team_name }} Portal</span>
+            </a>
+            
+            <!-- Dark/Light Mode Toggle -->
+            <div class="ms-auto d-flex align-items-center">
+                <div class="form-check form-switch me-3">
+                    <input class="form-check-input" type="checkbox" id="darkModeToggle" style="cursor: pointer;">
+                    <label class="form-check-label" for="darkModeToggle" style="cursor: pointer;">
+                        <i class="fas fa-moon theme-toggle-icon"></i>
+                    </label>
+                </div>
+            
+            <div class="navbar-nav ms-auto">
+                <div class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
+                        {% if current_user.player.photo_url %}
+                        <img src="{{ url_for('static', filename=current_user.player.photo_url) }}" 
+                             alt="{{ current_user.player.full_name }}" 
+                             class="rounded-circle player-avatar me-2"
+                             onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="bg-light rounded-circle player-avatar me-2 d-flex align-items-center justify-content-center" style="display: none;">
+                            <i class="fas fa-user text-muted"></i>
+                        </div>
+                        {% else %}
+                        <div class="bg-light rounded-circle player-avatar me-2 d-flex align-items-center justify-content-center">
+                            <i class="fas fa-user text-muted"></i>
+                        </div>
+                        {% endif %}
+                        <span>{{ current_user.player.first_name }}</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="{{ url_for('player_profile') }}">
+                            <i class="fas fa-user me-2"></i>My Profile
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{{ url_for('player_logout') }}">
+                            <i class="fas fa-sign-out-alt me-2"></i>Logout
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 px-0">
+                <div class="sidebar p-3">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link {{ 'active' if request.endpoint == 'player_dashboard' }}" href="{{ url_for('player_dashboard') }}">
+                                <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ 'active' if request.endpoint == 'player_news' }}" href="{{ url_for('player_news') }}">
+                                <i class="fas fa-newspaper me-2"></i>Team News
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ 'active' if request.endpoint == 'player_squad' }}" href="{{ url_for('player_squad') }}">
+                                <i class="fas fa-users me-2"></i>Squad
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ 'active' if request.endpoint == 'player_staff' }}" href="{{ url_for('player_staff') }}">
+                                <i class="fas fa-user-tie me-2"></i>Staff
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ 'active' if request.endpoint == 'player_training' }}" href="{{ url_for('player_training') }}">
+                                <i class="fas fa-dumbbell me-2"></i>Training
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ 'active' if request.endpoint == 'player_profile' }}" href="{{ url_for('player_profile') }}">
+                                <i class="fas fa-user me-2"></i>My Profile
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-9 col-lg-10">
+                <div class="main-content p-4">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+
+                    {% block content %}{% endblock %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Dark Mode Toggle Script -->
+    <script>
+        // Function to set the theme
+        function setTheme(theme) {
+            if (theme === 'dark') {
+                document.documentElement.setAttribute('data-bs-theme', 'dark');
+                document.getElementById('darkModeToggle').checked = true;
+                document.querySelector('.theme-toggle-icon').classList.remove('fa-moon');
+                document.querySelector('.theme-toggle-icon').classList.add('fa-sun');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-bs-theme', 'light');
+                document.getElementById('darkModeToggle').checked = false;
+                document.querySelector('.theme-toggle-icon').classList.remove('fa-sun');
+                document.querySelector('.theme-toggle-icon').classList.add('fa-moon');
+                localStorage.setItem('theme', 'light');
+            }
+            
+            // Force a reflow to ensure styles are applied
+            document.body.offsetHeight;
+        }
+
+        // Check for saved user preference, if any, on load
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        setTheme(savedTheme);
+
+        // Toggle theme when the toggle is clicked
+        document.getElementById('darkModeToggle').addEventListener('change', function() {
+            const theme = this.checked ? 'dark' : 'light';
+            setTheme(theme);
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

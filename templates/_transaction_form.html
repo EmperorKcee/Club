@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">{% if transaction %}Edit{% else %}Add New{% endif %} Transaction</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('add_transaction') if not transaction else url_for('edit_transaction', transaction_id=transaction.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <input type="text" class="form-control" id="description" name="description" 
+                                   value="{{ transaction.description if transaction else '' }}" required>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="amount" class="form-label">Amount (ZMW)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">ZMW</span>
+                                    <input type="number" step="0.01" class="form-control" id="amount" name="amount" 
+                                           value="{{ '%.2f'|format(transaction.amount) if transaction else '' }}" required>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="transaction_date" class="form-label">Date</label>
+                                <input type="date" class="form-control" id="transaction_date" name="transaction_date" 
+                                       value="{{ transaction.transaction_date.strftime('%Y-%m-%d') if transaction else now.strftime('%Y-%m-%d') }}" required>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="transaction_type" class="form-label">Type</label>
+                                <select class="form-select" id="transaction_type" name="transaction_type" required>
+                                    <option value="income" {% if transaction and transaction.transaction_type == 'income' %}selected{% endif %}>Income</option>
+                                    <option value="expense" {% if transaction and transaction.transaction_type == 'expense' %}selected{% endif %}>Expense</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="category" class="form-label">Category</label>
+                                <select class="form-select" id="category" name="category" required>
+                                    <option value="" disabled selected>Select a category</option>
+                                    <optgroup label="Income">
+                                        <option value="sponsorship" {% if transaction and transaction.category == 'sponsorship' %}selected{% endif %}>Sponsorship</option>
+                                        <option value="ticket_sales" {% if transaction and transaction.category == 'ticket_sales' %}selected{% endif %}>Ticket Sales</option>
+                                        <option value="merchandise" {% if transaction and transaction.category == 'merchandise' %}selected{% endif %}>Merchandise</option>
+                                        <option value="broadcast" {% if transaction and transaction.category == 'broadcast' %}selected{% endif %}>Broadcast Rights</option>
+                                        <option value="other_income" {% if transaction and transaction.category == 'other_income' %}selected{% endif %}>Other Income</option>
+                                    </optgroup>
+                                    <optgroup label="Expenses">
+                                        <option value="salaries" {% if transaction and transaction.category == 'salaries' %}selected{% endif %}>Salaries</option>
+                                        <option value="facilities" {% if transaction and transaction.category == 'facilities' %}selected{% endif %}>Facilities</option>
+                                        <option value="travel" {% if transaction and transaction.category == 'travel' %}selected{% endif %}>Travel</option>
+                                        <option value="equipment" {% if transaction and transaction.category == 'equipment' %}selected{% endif %}>Equipment</option>
+                                        <option value="other_expense" {% if transaction and transaction.category == 'other_expense' %}selected{% endif %}>Other Expense</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ url_for('finances') }}" class="btn btn-outline-secondary me-md-2">Cancel</a>
+                            <button type="submit" class="btn btn-primary">
+                                {% if transaction %}Update{% else %}Add{% endif %} Transaction
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Update category options based on transaction type
+const typeSelect = document.getElementById('transaction_type');
+const categorySelect = document.getElementById('category');
+
+function updateCategoryOptions() {
+    const type = typeSelect.value;
+    const currentValue = categorySelect.value;
+    
+    // Save the current selection if it's valid for the new type
+    const validCategories = {
+        'income': ['sponsorship', 'ticket_sales', 'merchandise', 'broadcast', 'other_income'],
+        'expense': ['salaries', 'facilities', 'travel', 'equipment', 'other_expense']
+    };
+    
+    // Clear and rebuild options
+    categorySelect.innerHTML = '<option value="" disabled selected>Select a category</option>';
+    
+    // Add income categories
+    const incomeGroup = document.createElement('optgroup');
+    incomeGroup.label = 'Income';
+    ['sponsorship', 'ticket_sales', 'merchandise', 'broadcast', 'other_income'].forEach(cat => {
+        const option = document.createElement('option');
+        option.value = cat;
+        option.textContent = cat.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        if (type === 'income' && cat === currentValue) {
+            option.selected = true;
+        }
+        incomeGroup.appendChild(option);
+    });
+    
+    // Add expense categories
+    const expenseGroup = document.createElement('optgroup');
+    expenseGroup.label = 'Expenses';
+    ['salaries', 'facilities', 'travel', 'equipment', 'other_expense'].forEach(cat => {
+        const option = document.createElement('option');
+        option.value = cat;
+        option.textContent = cat.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        if (type === 'expense' && cat === currentValue) {
+            option.selected = true;
+        }
+        expenseGroup.appendChild(option);
+    });
+    
+    // Show/hide based on type
+    if (type === 'income') {
+        categorySelect.appendChild(incomeGroup);
+    } else {
+        categorySelect.appendChild(expenseGroup);
+    }
+    
+    // If current value is not in the new type's categories, clear selection
+    if (!validCategories[type].includes(currentValue)) {
+        categorySelect.value = '';
+    }
+}
+
+// Initialize and add event listener
+typeSelect.addEventListener('change', updateCategoryOptions);
+updateCategoryOptions(); // Initialize on page load
+</script>
+{% endblock %}
